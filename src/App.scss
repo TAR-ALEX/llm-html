@@ -1,0 +1,31 @@
+/* make the customizations */
+// $theme-colors: (
+//   "primary":    $primary,
+//   "secondary":  $secondary,
+//   "success":    $success,
+//   "info":       $info,
+//   "warning":    $warning,
+//   "danger":     $danger,
+//   "light":      $light,
+//   "dark":       $dark
+// );
+
+
+@use 'bootstrap/scss/bootstrap';
+
+/* In your CSS file */
+.responsive-offcanvas {
+    --bs-offcanvas-width: 100% !important;
+}
+
+@media (min-width: 1400px) {
+    .responsive-offcanvas {
+        --bs-offcanvas-width: 75% !important;
+    }
+}
+
+@media (min-width: 1200px) {
+    .responsive-offcanvas {
+        --bs-offcanvas-width: 75% !important;
+    }
+}
