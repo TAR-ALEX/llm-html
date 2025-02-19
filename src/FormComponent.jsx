@@ -237,9 +237,8 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
     section.fields.forEach(field => {
       // Only set default if the field isn't in initialState
       if (acc[field.name] === undefined) {
-        acc[field.name] = field.defaultValue !== undefined ? field.defaultValue : '';
-      }
-      if(getType[field.name] === 'json'){
+        acc[field.name] = field.placeholder !== undefined ? field.placeholder : '';
+      }else if(getType[field.name] === 'json'){
         // if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name], null, 2);
         if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name]);
       }
@@ -372,7 +371,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
       }
       return acc;
     }, {});
-    console.log('saved config:', filteredData, enabledFields);
 
     // Ensure all initialState fields exist in filteredData
     Object.keys(initialState).forEach(key => {
@@ -380,6 +378,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
         filteredData[key] = initialState[key];
       }
     });
+    console.log('saved config:', filteredData, enabledFields);
     // Call the onSubmit function with the filtered data
     onSubmit(filteredData);
   };

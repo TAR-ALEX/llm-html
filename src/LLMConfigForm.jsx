@@ -22,17 +22,15 @@ const llmConfigSchema = [
         name: 'name',
         label: 'Nickname',
         type: 'text',
-        defaultValue: 'Default LLM',
+        placeholder: 'Default LLM',
         description: 'shortname to be displayed when selecting this model',
-        placeholder: 'e.g., LLaMA'
       },
       {
         name: 'baseURL',
         label: 'API URL',
         type: 'text',
-        defaultValue: 'http://localhost:8080/v1/chat/completions',
+        placeholder: 'http://localhost:8080/v1/chat/completions',
         description: 'Url of the openai compatible endpooint supporting /completions',
-        placeholder: 'e.g., http://localhost:8080/v1/chat/completions'
       },
       {
         name: 'apiKey',
@@ -40,7 +38,7 @@ const llmConfigSchema = [
         optional: true,
         type: 'text',
         description: 'Key for the openai compatible endpooint USE AT YOUR OWN RISK, STORED IN THE BROWSER CACHE!',
-        placeholder: 'e.g., password123'
+        placeholder: 'password123'
       },
       {
         name: 'model',
@@ -48,7 +46,7 @@ const llmConfigSchema = [
         optional: true,
         type: 'text',
         description: 'Name of the model to use',
-        placeholder: 'e.g., llama3'
+        placeholder: 'llama3'
       },
     ],
   },
@@ -62,7 +60,6 @@ const llmConfigSchema = [
         optional: true,
         description: 'Provide the prompt for this completion as a string or as an array of strings or numbers representing tokens.',
         placeholder: 'You are a helpful assistant.',
-        defaultValue: 'You are a helpful assistant.'
       },
       {
         name: 'thinking_escapes',
@@ -78,7 +75,6 @@ const llmConfigSchema = [
         type: 'boolean',
         optional: true,
         description: 'Remove Thinking from API calls. Model does not see its previous thought process making context longer. False if disabled',
-        // defaultValue: false,
         placeholder: "false",
       },
       {
@@ -98,7 +94,6 @@ const llmConfigSchema = [
         type: 'number',
         optional: true,
         min: 1,
-        //defaultValue: 40,
         placeholder: 40,
         description: 'Limit the next token selection to the K most probable tokens'
       },
@@ -138,7 +133,7 @@ const llmConfigSchema = [
       //   label: 'Stream',
       //   type: 'boolean',
       //   optional: true,
-      //   defaultValue: false,
+      //   placeholder: false,
       //   description: 'Enable real-time token streaming'
       // },
       {
@@ -208,7 +203,7 @@ const llmConfigSchema = [
         label: 'Mirostat',
         type: 'select',
         optional: true,
-        //defaultValue: 0,
+        //placeholder: 0,
         options: [
           { value: 0, label: 'Disabled' },
           { value: 1, label: 'Mirostat 1' },
@@ -317,7 +312,7 @@ const llmConfigSchema = [
         label: 'DRY Sequence Breakers',
         type: 'json',
         optional: true,
-        placeholder: "['\\n', ':', '\"', '*']",
+        placeholder: "[\"\\n\", \":\", \"\\\"\", \"*\"]",
         description: 'Specify an array of sequence breakers for DRY sampling'
       },
       {
