@@ -6,7 +6,6 @@ import './App.scss';
 import TextEditor from './TextEditor';
 import ChatDrawer from './ChatDrawer';
 import OpenAI from 'openai';
-import LLMConfigForm from './LLMConfigForm'
 import CacheClearer from './CacheClearer';
 
 function App() {

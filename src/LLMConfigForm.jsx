@@ -4,11 +4,11 @@ import FormComponent from './FormComponent';
 import { placeholder } from '@codemirror/view';
 
 // Testing component
-const LLMConfigForm = ({initialState, onSubmit, onCancel}) => {
+const LLMConfigForm = ({initialState, onSubmit, onDuplicate, onCancel}) => {
   return(
   <Container fluid className="h-100 d-flex flex-column">
     {/* <Row><h1 className="text-center my-4">LLM Configuration Generator</h1><div /></Row> */}
-    <Row className="flex-grow-1 overflow-auto"><FormComponent formConfig={llmConfigSchema} initialState={initialState} onSubmit={onSubmit} onCancel={onCancel} /></Row>
+    <Row className="flex-grow-1 overflow-auto"><FormComponent formConfig={llmConfigSchema} initialState={initialState} onSubmit={onSubmit} onDuplicate={onDuplicate} onCancel={onCancel} /></Row>
   </Container>
   )};
 

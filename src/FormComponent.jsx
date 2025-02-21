@@ -223,7 +223,7 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
   }
 };
 
-const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel }) => {
+const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplicate, onCancel }) => {
   const getType = Object.fromEntries(
     formConfig.flatMap(section =>
       section.fields
@@ -331,9 +331,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
     return null;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const computeResult = () => {
     // Validate fields and collect errors
     const newErrors = formConfig.flatMap(section =>
       section.fields
@@ -378,9 +376,20 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
         filteredData[key] = initialState[key];
       }
     });
-    console.log('saved config:', filteredData, enabledFields);
-    // Call the onSubmit function with the filtered data
-    onSubmit(filteredData);
+    return filteredData;
+  }
+
+  const handleSaveDup = () => {
+    let result = computeResult();
+    console.log('made dup config:', result, enabledFields);
+    onDuplicate(result);
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    let result = computeResult();
+    console.log('saved config:', result, enabledFields);
+    onSubmit(result);
   };
 
 
@@ -427,6 +436,9 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onCancel 
     <Stack direction="horizontal" className="mt-3" gap={2}>
       <Button variant="primary" type="submit">
         Save
+      </Button>
+      <Button variant="warning" onClick={handleSaveDup}>
+        Save Copy
       </Button>
       <Button variant="secondary" onClick={handleCancel}>
         Cancel

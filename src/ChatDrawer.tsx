@@ -17,7 +17,7 @@ interface ChatDrawerInterface {}
 function generateDefaultLLMConfig() {
     return {
         id: uuidv4(),
-        name: `LLM Config`,
+        name: `Default`,
         baseURL: "http://localhost:8080/v1/chat/completions",
         defaultSystemPrompt: "You are a helpful assistant.",
     };
@@ -58,7 +58,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
         const newChat: Chat = {
             id: uuidv4(),
             configId: selectedConfig.id, // Assign the selected config
-            name: `Chat ${chats.length + 1}`,
+            name: getUniqueChatName(chats.map(c => c.name), "Chat"),
             messages: sysprompt
         };
         addChat(newChat);
@@ -69,6 +69,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
 
     const createNewPreset = () => {
         const newConfig = generateDefaultLLMConfig();
+        newConfig.name = getUniqueName(configPresets.map(c => c.name), newConfig.name);
         addConfigPreset(newConfig);
         setConfigPresets([...configPresets, newConfig]);
     };
@@ -108,8 +109,27 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
     };
 
     const handleFormEdit = (config: LLMConfig) => {
+        // Get the old name from configPresets
+        const oldConfig = configPresets.find(c => c.id === config.id);
+        const oldName = oldConfig ? oldConfig.name : '';
+    
+        if (config.name !== oldName) {
+            config.name = getUniqueName(configPresets.map(c => c.name), config.name);
+        }
         modifyConfigPreset(config);
         setConfigPresets(prev => prev.map(c => c.id === config.id ? config : c));
+        setShowRightDrawer(false);
+        setTimeout(() => {
+            setRightDrawerView("llm-presets");
+            setShowRightDrawer(true);
+        }, 400);
+    };
+
+    const handleFormDuplicate = (config: LLMConfig) => {
+        config.id = uuidv4();
+        config.name = getUniqueName(configPresets.map(c => c.name), config.name);
+        addConfigPreset(config);
+        setConfigPresets(prev => [...prev, config]);
         setShowRightDrawer(false);
         setTimeout(() => {
             setRightDrawerView("llm-presets");
@@ -241,6 +261,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
                             <LLMConfigForm
                                 initialState={defaultSelectedConfig}
                                 onSubmit={(config: LLMConfig) => handleFormEdit(config)}
+                                onDuplicate={(config: LLMConfig) => handleFormDuplicate(config)}
                                 onCancel={() => handleFormCancel()}
                             />
                         </Offcanvas.Body>
@@ -296,3 +317,51 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
 };
 
 export default React.memo(ChatDrawer);
+
+
+function getUniqueChatName(existingNames: string[], newName: string): string {
+    let copyNumber = 1;
+    let uniqueName = `${newName} ${copyNumber}`;
+
+    while (existingNames.includes(uniqueName)) {
+        copyNumber++;
+        uniqueName = `${newName} ${copyNumber}`;
+    }
+
+    return uniqueName;
+}
+
+function getUniqueName(existingNames: string[], newName: string): string {
+    if (!existingNames.includes(newName)) {
+        return newName;
+    }
+
+    // Regular expression to match the (copy X) pattern at the end of the string
+    const copyPattern = / \(copy \d+\)$/;
+
+    // Check if the newName already has a (copy X) suffix
+    if (copyPattern.test(newName)) {
+        // Extract the base name and the current copy number
+        const baseName = newName.replace(copyPattern, '');
+        const currentCopyNumber = parseInt(newName.match(copyPattern)[0].match(/\d+/)[0], 10);
+        let copyNumber = currentCopyNumber + 1;
+        let uniqueName = `${baseName} (copy ${copyNumber})`;
+
+        while (existingNames.includes(uniqueName)) {
+            copyNumber++;
+            uniqueName = `${baseName} (copy ${copyNumber})`;
+        }
+
+        return uniqueName;
+    } else {
+        let copyNumber = 1;
+        let uniqueName = `${newName} (copy ${copyNumber})`;
+
+        while (existingNames.includes(uniqueName)) {
+            copyNumber++;
+            uniqueName = `${newName} (copy ${copyNumber})`;
+        }
+
+        return uniqueName;
+    }
+}
