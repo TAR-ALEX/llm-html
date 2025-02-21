@@ -128,14 +128,14 @@ const llmConfigSchema = [
         placeholder: -1,
         description: 'Maximum number of tokens to predict (-1 for infinity)'
       },
-      // {
-      //   name: 'stream',
-      //   label: 'Stream',
-      //   type: 'boolean',
-      //   optional: true,
-      //   placeholder: false,
-      //   description: 'Enable real-time token streaming'
-      // },
+      {
+        name: 'stream',
+        label: 'Stream',
+        type: 'boolean',
+        optional: true,
+        placeholder: true,
+        description: 'Enable real-time token streaming, true if field is disabled'
+      },
       {
         name: 'stop',
         label: 'Stop',

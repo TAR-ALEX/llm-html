@@ -129,7 +129,7 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
         <Form.Group className="mb-3" key={field.name}>
           <FieldLabel />
           <Form.Select
-            onChange={(e) => onChange(e.target.value === 'true')}
+            onChange={(e) => onChange(e.target.value)}
             {...commonProps}
           >
             <option value="false">False</option>
@@ -241,6 +241,8 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       }else if(getType[field.name] === 'json'){
         // if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name], null, 2);
         if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name]);
+      }else if(getType[field.name] === 'boolean'){
+        acc[field.name] = acc[field.name] ? 'true' : 'false';
       }
     });
     return acc;
@@ -359,11 +361,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
           console.error(error);
         }
       }else if(getType[key] == 'boolean'){
-        try{
-          acc[key] = Boolean(filteredData[key]);
-        }catch(error){
-          acc[key] = false;
-        }
+          acc[key] = filteredData[key] === 'true';
       }else{
         acc[key] = filteredData[key];
       }

@@ -45,6 +45,8 @@ export interface ChatCompletion {
     message: {
       role: string;
       content: string;
+      reasoning?: string;
+      reasoning_content?: string;
     };
     logprobs: null;
     finish_reason: string;
@@ -156,9 +158,9 @@ class LLMApi {
                           }
                           isReasoning = true;
                           data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + data.choices[0].delta.reasoning;
-                        } else {
+                        } else if (data.choices[0].delta.content) {
                           if (isReasoning) {
-                            data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + this.config.thinkingTokens.end;
+                            data.choices[0].delta.content = this.config.thinkingTokens.end + (data.choices[0].delta.content ?? "");
                           }
                           isReasoning = false;
                         }
@@ -183,6 +185,14 @@ class LLMApi {
           return generate();
         } else {
           const data: ChatCompletion = await response.json();
+          if (this.config.thinkingTokens != null) {
+            if (data.choices[0].message.reasoning_content) {
+              data.choices[0].message.reasoning = data.choices[0].message.reasoning_content;
+            }
+            if (data.choices[0].message.reasoning) {
+              data.choices[0].message.content = this.config.thinkingTokens.start + (data.choices[0].message.reasoning ?? "") + this.config.thinkingTokens.end + data.choices[0].message.content;
+            }
+          }
           return data;
         }
       }

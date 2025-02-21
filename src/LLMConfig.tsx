@@ -51,6 +51,7 @@ export type LLMConfig = {
   lora?: any;
   defaultSystemPrompt?: string;
   include_reasoning?: boolean;
+  stream?: boolean;
 }
 
 export type LLMConfigChat = Omit<LLMConfig, 'id' | 'name' | 'baseURL' | 'apiKey' | 'defaultSystemPrompt' | 'thinking_escapes' | 'mask_thinking'>;

@@ -3,7 +3,7 @@ import { Container } from 'react-bootstrap';
 import ChatThread from './ChatThread';
 import ChatInput from './ChatInput';
 import { Message } from './ChatBubble';
-import LLMApi, { ChatCompletionChunk } from './LlamaCppApi';
+import LLMApi, { ChatCompletion, ChatCompletionChunk } from './LlamaCppApi';
 import { getThinkingStartAndEnd, LLMConfig, maskToLLMConfigChat, removeThinkingTokens } from './LLMConfig';
 
 export type LLMChatProps = {
@@ -69,8 +69,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
             };
         }),
         ...maskToLLMConfigChat(llmConfig),
-        
-        stream: true,
+        stream: llmConfig.stream ?? true,
       }, { signal: controller.signal });
 
       let buffer = '';
@@ -93,24 +92,29 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         });
       };
 
-      for await (const chunk of stream as AsyncIterable<ChatCompletionChunk>) {
-        const contentChunk = chunk.choices[0]?.delta?.content || '';
-        buffer += contentChunk;
+      if(llmConfig.stream ?? true){
+        for await (const chunk of stream as AsyncIterable<ChatCompletionChunk>) {
+          const contentChunk = chunk.choices[0]?.delta?.content || '';
+          buffer += contentChunk;
 
-        if (!animationFrameId) {
-          animationFrameId = requestAnimationFrame(() => {
-            setTimeout(() => {
-              flushBuffer();
-              animationFrameId = null;
-            }, 10);
-          });
+          if (!animationFrameId) {
+            animationFrameId = requestAnimationFrame(() => {
+              setTimeout(() => {
+                flushBuffer();
+                animationFrameId = null;
+              }, 10);
+            });
+          }
         }
-      }
 
-      // Flush any remaining content after stream ends
-      flushBuffer();
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+        // Flush any remaining content after stream ends
+        flushBuffer();
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          flushBuffer();
+        }
+      }else{
+        buffer = (stream as ChatCompletion).choices[0].message.content;
         flushBuffer();
       }
     } catch (error: any) {
