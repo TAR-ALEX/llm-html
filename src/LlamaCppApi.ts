@@ -2,6 +2,10 @@ import { LLMConfigChat } from "./LLMConfig";
 
 export interface MyLLMApiConfig {
   apiKey?: string;
+  thinkingTokens?: {
+    start: string;
+    end: string;
+  }
   dangerouslyAllowBrowser?: boolean;
   baseURL?: string;
 }
@@ -22,6 +26,8 @@ export interface ChatCompletionChunk {
     delta: {
       role?: string;
       content?: string;
+      reasoning?: string;
+      reasoning_content?: string;
     };
     logprobs: null;
     finish_reason: string | null;
@@ -119,8 +125,9 @@ class LLMApi {
           const reader = response.body.getReader();
           const decoder = new TextDecoder();
 
-          async function* generate(): AsyncIterable<ChatCompletionChunk> {
+          const generate = async function* (this: LLMApi): AsyncIterable<ChatCompletionChunk> {
             let buffer = '';
+            let isReasoning = false;
 
             try {
               while (true) {
@@ -140,6 +147,22 @@ class LLMApi {
                     try {
                       const json = trimmed.slice(6);
                       const data: ChatCompletionChunk = JSON.parse(json);
+                      if (this.config.thinkingTokens != null) {
+                        if (data.choices[0].delta.reasoning_content)
+                          data.choices[0].delta.reasoning = data.choices[0].delta.reasoning_content;
+                        if (data.choices[0].delta.reasoning) {
+                          if (!isReasoning) {
+                            data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + this.config.thinkingTokens.start;
+                          }
+                          isReasoning = true;
+                          data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + data.choices[0].delta.reasoning;
+                        } else {
+                          if (isReasoning) {
+                            data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + this.config.thinkingTokens.end;
+                          }
+                          isReasoning = false;
+                        }
+                      }
                       yield data;
                     } catch (e) {
                       console.error('Error parsing chunk:', e);
@@ -155,7 +178,7 @@ class LLMApi {
             } finally {
               reader.releaseLock();
             }
-          }
+          }.bind(this);
 
           return generate();
         } else {

@@ -55,6 +55,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
 
     const openai = new LLMApi({
       apiKey: llmConfig.apiKey ?? '', // Add your OpenAI API key here
+      thinkingTokens: llmConfig.thinking_escapes,
       dangerouslyAllowBrowser: true,
       baseURL: llmConfig.baseURL,
     });
