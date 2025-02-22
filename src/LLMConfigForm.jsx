@@ -129,14 +129,6 @@ const llmConfigSchema = [
         description: 'Maximum number of tokens to predict (-1 for infinity)'
       },
       {
-        name: 'stream',
-        label: 'Stream',
-        type: 'boolean',
-        optional: true,
-        placeholder: true,
-        description: 'Enable real-time token streaming, true if field is disabled'
-      },
-      {
         name: 'stop',
         label: 'Stop',
         type: 'json',
@@ -203,7 +195,7 @@ const llmConfigSchema = [
         label: 'Mirostat',
         type: 'select',
         optional: true,
-        //placeholder: 0,
+        placeholder: 0,
         options: [
           { value: 0, label: 'Disabled' },
           { value: 1, label: 'Mirostat 1' },
@@ -477,6 +469,14 @@ const llmConfigSchema = [
         optional: true,
         placeholder: '[{"id": 0, "scale": 0.5}, {"id": 1, "scale": 1.1}]',
         description: 'A list of LoRA adapters to be applied to this specific request'
+      },
+      {
+        name: 'stream',
+        label: 'Stream',
+        type: 'boolean',
+        optional: true,
+        placeholder: true,
+        description: 'Enable real-time token streaming, true if field is disabled'
       },
       {
         name: 'include_reasoning',

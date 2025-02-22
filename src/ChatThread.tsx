@@ -26,29 +26,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const listGroupRef = useRef<HTMLDivElement>(null);
-    const [isListGroupSmaller, setIsListGroupSmaller] = useState(false);
 
-    useEffect(() => {
-        const handleResize = () => {
-            const containerHeight = containerRef.current?.clientHeight || 0;
-            const listGroupHeight = listGroupRef.current?.clientHeight || 0;
-            const isSmaller = listGroupHeight < containerHeight;
-            setIsListGroupSmaller(isSmaller);
-        };
-
-        // Initial check
-        handleResize();
-
-        // Add event listener for resize
-        window.addEventListener('resize', handleResize);
-
-        // Cleanup event listener on component unmount
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [messages]);
-
-    var listElems = messages.map((message, index) => (
+    const listElems = messages.map((message, index) => (
         <ChatBubble
             key={index}
             index={index}
@@ -58,14 +37,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             onRefresh={onRefresh}
             onContinue={onContinue}
             isLoading={isLoading}
+            isLast={index === messages.length-1}
             editingIndex={editingIndex}
             setEditingIndex={setEditingIndex}
             llmConfig={llmConfig}
         />
     ));
-    if (!isListGroupSmaller) {
-        listElems = listElems.reverse();
-    }
 
     return (
         <Container
@@ -76,10 +53,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 marginTop: '10px',
                 marginBottom: '10px',
                 display: 'flex',
-                flexDirection: isListGroupSmaller ? 'column' : 'column-reverse',
+                flexDirection: 'column-reverse',
             }}
         >
-            <ListGroup ref={listGroupRef} style={{ flexDirection: isListGroupSmaller ? 'column' : 'column-reverse' }}>
+            <div style={{ flexGrow: 1 }}></div> {/* Spacer div */}
+            <ListGroup ref={listGroupRef} style={{ flexDirection: 'column' }}>
                 {listElems}
             </ListGroup>
         </Container>

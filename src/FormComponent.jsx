@@ -132,8 +132,8 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
             onChange={(e) => onChange(e.target.value)}
             {...commonProps}
           >
-            <option value="false">False</option>
-            <option value="true">True</option>
+            <option value={false}>False</option>
+            <option value={true}>True</option>
           </Form.Select>
           {field.description && (
             <Form.Text className="text-muted">{field.description}</Form.Text>
@@ -241,9 +241,10 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       }else if(getType[field.name] === 'json'){
         // if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name], null, 2);
         if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name]);
-      }else if(getType[field.name] === 'boolean'){
-        acc[field.name] = acc[field.name] ? 'true' : 'false';
       }
+      // else if(getType[field.name] === 'boolean'){
+      //   acc[field.name] = acc[field.name] ? 'true' : 'false';
+      // }
     });
     return acc;
   }, { ...initialState }); // Start with a copy of the provided initialState
@@ -361,7 +362,13 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
           console.error(error);
         }
       }else if(getType[key] == 'boolean'){
-          acc[key] = filteredData[key] === 'true';
+          acc[key] = filteredData[key] === 'true' || filteredData[key] === true;
+      }else if(getType[key] == 'select'){
+        try{
+          acc[key] = Number(filteredData[key]);
+        }catch(e){
+          acc[key] = 0;
+        }
       }else{
         acc[key] = filteredData[key];
       }

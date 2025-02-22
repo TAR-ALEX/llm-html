@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
-import { ListGroup, Form, Button, ButtonGroup } from 'react-bootstrap';
+import { ListGroup, Form, Button, ButtonGroup, Spinner } from 'react-bootstrap';
 import MarkdownRenderer from './MarkdownRenderer';
 import { getThinkingStartAndEnd, LLMConfig } from './LLMConfig';
 
@@ -16,12 +16,13 @@ interface ChatBubbleInterface {
   onRefresh: (index: number) => void;
   onContinue: (index: number) => void;
   isLoading: boolean;
+  isLast: boolean;
   editingIndex: number | null;
   setEditingIndex: React.Dispatch<React.SetStateAction<number | null>>;
   llmConfig?: LLMConfig;
 }
 
-const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, editingIndex, setEditingIndex, llmConfig }) => {
+const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editedContent, setEditedContent] = useState(content);
@@ -142,9 +143,11 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 wordWrap: 'break-word', // Breaks long words to fit
               }}
             />
-            <ButtonGroup className="d-flex justify-content-end gap-2">
+            {/* <ButtonGroup className="d-flex justify-content-end gap-2"> */}
+            <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
-                variant="outline-secondary"
+                className='px-3'
+                variant="secondary"
                 size="sm"
                 onClick={handleCancel}
                 disabled={isLoading}
@@ -152,6 +155,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 Cancel
               </Button>
               <Button
+                className='px-3'
                 variant="primary"
                 size="sm"
                 onClick={handleSave}
@@ -161,6 +165,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
               </Button>
               {sender === 'assistant' ? (
                 <Button
+                  className='px-3'
                   variant="success"
                   size="sm"
                   onClick={handleSaveAndContinue}
@@ -170,6 +175,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 </Button>
               ) : (
                 <Button
+                  className='px-3'
                   variant="success"
                   size="sm"
                   onClick={() => {
@@ -181,13 +187,14 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                   Send
                 </Button>
               )}
-            </ButtonGroup>
+            </div>
           </>
         ) : (
           <>
             <MarkdownRenderer thinkingTokens={thinkingTokens}>{content}</MarkdownRenderer>
-            <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2`}>
+            <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
+                className='px-3'
                 variant="outline-primary"
                 size="sm"
                 onClick={handleEditClick}
@@ -196,13 +203,20 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 Edit
               </Button>
               <Button
+                className='px-3'
                 variant="outline-secondary"
                 size="sm"
                 onClick={() => onRefresh(index)}
                 disabled={isDisabled}
               >
-                Refresh
+                {(isLoading && isLast) ?
+                  <>
+                    <Spinner className='me-2' as="span" animation="border" role="status" size="sm" />
+                    Loading...
+                  </>
+                  : <>Refresh</>}
               </Button>
+
             </div>
           </>
         )}

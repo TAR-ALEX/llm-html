@@ -86,12 +86,26 @@ class LLMApi {
     }
   }
 
+  private checkMixedContent() {
+    const currentProtocol = window.location.protocol;
+    const apiProtocol = new URL(this.config.baseURL!).protocol;
+    const apiHostname = new URL(this.config.baseURL!).hostname;
+
+    if ((apiHostname !== 'localhost' && apiHostname !== '127.0.0.1') && (currentProtocol === 'https:' && apiProtocol === 'http:')) {
+      throw new Error('Mixed content detected: The page is served over HTTPS, but the API URL is using HTTP. Please download the page locally or serve it via HTTPS.');
+    }
+    // if (currentProtocol === 'http:' && apiProtocol === 'https:') {
+    //   throw new Error('Mixed content detected: The page is served over HTTP, but the API URL is using HTTPS. Please download the page locally or serve it via HTTP.');
+    // }
+  }
+
   public chat = {
     completions: {
       create: async (
         params: ChatCompletionCreateParams,
         options?: { signal?: AbortSignal }
       ): Promise<AsyncIterable<ChatCompletionChunk> | ChatCompletion> => {
+        this.checkMixedContent();
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         };
@@ -106,8 +120,7 @@ class LLMApi {
           headers.Authorization = `Bearer ${this.config.apiKey}`;
         }
 
-        // const response = await fetch(this.config.baseURL! + '/v1/chat/completions', {
-        const response = await fetch(this.config.baseURL! + '', {
+        const response = await fetch(this.config.baseURL!, {
           method: 'POST',
           headers,
           body: JSON.stringify({ ...params }),

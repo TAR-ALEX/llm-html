@@ -120,7 +120,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('API Error:', error);
-        alert('Error fetching response. Check console for details.');
+        alert(`Error fetching response. Check console for details.\n\n${error}`);
       }
     } finally {
       setIsLoading(false);
@@ -175,8 +175,8 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     const updatedMessages = [...messages, newUserMessage, newAssistantStarter];
 
     setNewMessage('');
-    setEditingIndex(null);
     setTimeout(() => inputRef.current?.focus(), 0);
+    setTimeout(() => {setEditingIndex(null);}, 10);
     await fetchAssistantResponse(updatedMessages);
   }, [wholeMessages, newMessage, isLoading, fetchAssistantResponse]);
 
