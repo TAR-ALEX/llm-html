@@ -1,17 +1,50 @@
-/* make the customizations */
-// $theme-colors: (
-//   "primary":    $primary,
-//   "secondary":  $secondary,
-//   "success":    $success,
-//   "info":       $info,
-//   "warning":    $warning,
-//   "danger":     $danger,
-//   "light":      $light,
-//   "dark":       $dark
-// );
+// @include color-scheme(light) {
+//     $primary: #99ff00;
+// }
+@import "bootstrap/scss/functions"; 
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
 
+// [data-bs-theme="custom"] {
+//     color-scheme: dark;
+//     $primary: #99ff00; 
+//     $theme-colors: map-merge($theme-colors, (
+//       "primary": $primary
+//     ));
+    
+//     $body-bg: #323232;
+//     $link-decoration: none;
+//     $link-color          : darken($primary, 15%);
+//     $link-hover-color    : darken($link-color, 15%);
+//     $input-bg            : tint-color($green, 95%);
+//     $form-check-input-bg : $input-bg;
+//     $form-select-bg      : $input-bg;
+//     $breadcrumb-active-color: darken($primary, 30%);
+//     // bs5.3 changed default bg colors for several elements to the $body-bg. Override back to white.
+//     $card-bg             : $black;
+//     $table-bg            : $black;
+//     $dropdown-bg         : $black;
+//     $list-group-bg       : $black;
+//     $enable-dark-mode    : true;
+    
+//     @import "bootstrap/scss/variables";
+//     @import "bootstrap/scss/variables-dark";
+//     @import "bootstrap/scss/maps";
+//     @import "bootstrap/scss/mixins";
+//     @import "bootstrap/scss/root";
+    
+//     @import "bootstrap/scss/utilities";
+//     @import "bootstrap/scss/reboot";
+//     @import "bootstrap/scss/type";
+//     @import "bootstrap/scss/images";
+//     @import "bootstrap/scss/grid";
+//     @import "bootstrap/scss/containers";
+//     @import "bootstrap/scss/buttons";
+    
+// }
 
-@use 'bootstrap/scss/bootstrap';
+@import 'bootstrap/scss/bootstrap';
+
 
 /* In your CSS file */
 .responsive-offcanvas {

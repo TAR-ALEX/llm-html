@@ -402,7 +402,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     <Form className="h-100 d-flex flex-column" onSubmit={handleSubmit} noValidate>
       <Container fluid className='overflow-auto h-100 m-0 p-0'>
         <Container fluid className='m-0 p-0'>
-          <Accordion defaultActiveKey="0" alwaysOpen>
+          <Accordion defaultActiveKey={['0']} alwaysOpen>
             {formConfig.map((section, index) => (
               <Accordion.Item eventKey={index.toString()} key={section.label}>
                 <Accordion.Header>{section.label}</Accordion.Header>

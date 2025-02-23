@@ -1,8 +1,7 @@
 //import viteLogo from './assets/vite.svg?url'
-import 'bootstrap/dist/css/bootstrap.min.css';
+// import 'bootstrap/dist/css/bootstrap.min.css';
 import MergeComponent from './MergeComponent'
 import Container from 'react-bootstrap/Container';
-import './App.scss';
 import TextEditor from './TextEditor';
 import ChatDrawer from './ChatDrawer';
 import OpenAI from 'openai';
@@ -11,7 +10,6 @@ import { useState } from 'react';
 import { Modal } from 'react-bootstrap';
 
 function App() {
-  []
   // return (
   //   <>
   //     <div className="App">

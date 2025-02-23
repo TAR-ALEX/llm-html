@@ -214,7 +214,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                     <Spinner className='me-2' as="span" animation="border" role="status" size="sm" />
                     Loading...
                   </>
-                  : <>Refresh</>}
+                  : <>{sender !== 'assistant' ? 'Resend' : 'Refresh'}</>}
               </Button>
 
             </div>
