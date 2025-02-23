@@ -29,8 +29,10 @@ const CollapsibleAlert = ({ variant, title, children }) => {
 
       {/* Collapsible body */}
       <Collapse in={isOpen}>
-        <div id="collapsible-content" className="p-2">
-          {children}
+        <div className="p-0">
+          <div className="p-2">
+            {children}
+          </div>
         </div>
       </Collapse>
     </Alert>
