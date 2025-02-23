@@ -12,7 +12,9 @@ import ConfigPresetItem from './ConfigPresetItem';
 import { Chat, loadChats, loadSelectedChatId, saveSelectedChatId, loadConfigPresets, addChat, deleteChat, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadSelectedConfigId, saveSelectedConfigId } from './storage';
 import ChatListItem from './ChatListItem';
 
-interface ChatDrawerInterface {}
+interface ChatDrawerInterface {
+    onError?: (header: string, content: string) => void;
+}
 
 function generateDefaultLLMConfig() {
     return {
@@ -23,7 +25,7 @@ function generateDefaultLLMConfig() {
     };
 }
 
-const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
+const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
     const [chats, setChats] = useState<Chat[]>([]);
     const [configPresets, setConfigPresets] = useState<LLMConfig[]>([]);
     const [selectedChatId, setSelectedChatId] = useState<string | null>();
@@ -44,7 +46,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
 
     const createNewChat = () => {
         if (configPresets.length === 0 || !selectedConfig) {
-            alert("Please select or create a configuration before creating a new chat.");
+            if(onError) onError("Info", "Please select or create a configuration before creating a new chat.");
             return;
         }
 
@@ -301,6 +303,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({}) => {
                         llmConfig={selectedConfig}
                         initialMessages={selectedChat.messages}
                         onMessagesChange={handleMessagesChange}
+                        onError={onError}
                     />
                 ) : selectedConfig ? (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">

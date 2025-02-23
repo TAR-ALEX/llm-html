@@ -10,11 +10,12 @@ export type LLMChatProps = {
   llmConfig: LLMConfig;
   onMessagesChange?: (messages: Message[]) => void;
   initialMessages?: Message[];
+  onError?: (header: string, content: string) => void;
 };
 
 const newAssistantStarter = { sender: 'assistant', content: '' };
 
-const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages }) => {
+const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [wholeMessages, setWholeMessages] = useState<Message[]>(messages);
   const [newMessage, setNewMessage] = useState('');
@@ -120,7 +121,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('API Error:', error);
-        alert(`Error fetching response. Check console for details.\n\n${error}`);
+        if(onError) onError("Error", `Error fetching response. Check console for details.\n\n${error}`);
       }
     } finally {
       setIsLoading(false);

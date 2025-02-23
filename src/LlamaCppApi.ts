@@ -92,7 +92,7 @@ class LLMApi {
     const apiHostname = new URL(this.config.baseURL!).hostname;
 
     if ((apiHostname !== 'localhost' && apiHostname !== '127.0.0.1') && (currentProtocol === 'https:' && apiProtocol === 'http:')) {
-      throw new Error('Mixed content detected: The page is served over HTTPS, but the API URL is using HTTP. Please download the page locally or serve it via HTTPS.');
+      throw new Error('Mixed content detected: The page is served over HTTPS, but the API URL is using HTTP causing a security downgrade. Please download the page locally or serve it via HTTP. This is a browser limitation');
     }
     // if (currentProtocol === 'http:' && apiProtocol === 'https:') {
     //   throw new Error('Mixed content detected: The page is served over HTTP, but the API URL is using HTTPS. Please download the page locally or serve it via HTTP.');
