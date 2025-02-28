@@ -333,7 +333,7 @@ class LLMApi {
             }
             throw new Error(`Failure: Could not obtain a chat template for completion API`);
           }
-          throw new Error(`Failure: define supported API paths`);
+          throw new Error(`Failure: define a supported API path in the config, for example: /v1/chat/completions`);
         }
       }
     }
