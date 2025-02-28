@@ -103,8 +103,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         checkAtBottom();
     }, []);
 
-    console.log(flexDirection);
-
     return (
         <Container
             ref={containerRef}

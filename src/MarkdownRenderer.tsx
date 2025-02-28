@@ -104,10 +104,10 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, renderCodeEngine
                 </Alert>
               ) : (<></>)}
               {mode === 'syntaxhighlighter' ? (
-                <MemoizedSyntaxHighlighter segment={segment}/>
+                <MemoizedSyntaxHighlighter key={`code-${index}`} segment={segment}/>
               ) : (<></>)}
               {mode === 'none' ? (
-                <Alert variant="dark">
+                <Alert key={`code-${index}`} variant="dark">
                   <code>
                     {segment.content}
                   </code>
@@ -117,7 +117,7 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, renderCodeEngine
           );
         } else if (segment.type === 'thinking') {
           return (
-            <CollapsibleAlert title='Thinking' variant="secondary">
+            <CollapsibleAlert key={`code-${index}`} title='Thinking' variant="secondary">
               <div style={{ whiteSpace: 'pre-wrap' }}>
                 {segment.content.trim()}
               </div>
