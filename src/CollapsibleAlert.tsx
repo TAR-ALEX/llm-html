@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Alert, Collapse } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
 const CollapsibleAlert = ({ variant, title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const timeoutRef = useRef(null);
+
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const handleToggle = () => {
-    setIsOpen((prev) => !prev);
+    if (timeoutRef.current === null) {
+      setIsOpen((prev) => !prev);
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
+      }, 700);
+    }
   };
 
   return (

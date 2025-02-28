@@ -9,7 +9,7 @@ import { Property } from 'csstype';
  *
  * @returns {boolean} True if overflow-anchor is supported, false otherwise.
  */
-export function supportsOverflowAnchor() {
+function supportsOverflowAnchor(): boolean {
     // Ensure we're in a browser environment.
     if (typeof window === 'undefined' || typeof document === 'undefined') {
       return false;
@@ -64,7 +64,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 }
                 var newVal: Property.FlexDirection = distFromBottom <= 5 ? 'column-reverse' : 'column';
 
-                if(!isLoading) return fd;
+                //if(!isLoading) return fd;
 
                 if(fd != newVal && newVal === "column") {
                     containerRef.current.style.flexDirection = 'column';
