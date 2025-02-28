@@ -2,6 +2,28 @@ import React, { useRef, useEffect, useCallback, useState, memo } from 'react';
 import { Container, ListGroup } from 'react-bootstrap';
 import ChatBubble, { Message } from './ChatBubble';
 import { LLMConfig } from './LLMConfig';
+import { Property } from 'csstype';
+
+/**
+ * Detects support for the CSS overflow-anchor property.
+ *
+ * @returns {boolean} True if overflow-anchor is supported, false otherwise.
+ */
+export function supportsOverflowAnchor() {
+    // Ensure we're in a browser environment.
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return false;
+    }
+  
+    // Use CSS.supports if available.
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+      return CSS.supports('overflow-anchor', 'auto');
+    }
+  
+    // Fallback: Create an element and check for the property in its style.
+    const testEl = document.createElement('div');
+    return 'overflowAnchor' in testEl.style;
+  }
 
 export type ChatThreadProps = {
     messages: Message[];
@@ -25,7 +47,34 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     llmConfig,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const spacerRef = useRef<HTMLDivElement>(null);
     const listGroupRef = useRef<HTMLDivElement>(null);
+    const [flexDirection, setFlexDirection] = useState<Property.FlexDirection>('column-reverse');
+
+    const overflowAnchor: Property.OverflowAnchor = supportsOverflowAnchor() ? 'auto' : 'none';
+
+    const checkAtBottom = useCallback(() => {
+        if (containerRef.current) {   
+            setFlexDirection((fd) => {         
+                var distFromBottom = 0;
+                if(fd === 'column-reverse') {
+                    distFromBottom = Math.abs(containerRef.current.scrollTop); 
+                }else{
+                    distFromBottom = containerRef.current.scrollHeight - containerRef.current.clientHeight - containerRef.current.scrollTop;
+                }
+                var newVal: Property.FlexDirection = distFromBottom <= 5 ? 'column-reverse' : 'column';
+
+                if(!isLoading) return fd;
+
+                if(fd != newVal && newVal === "column") {
+                    containerRef.current.style.flexDirection = 'column';
+                    containerRef.current.scrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight - 10;
+                }
+
+                return newVal;
+            });
+        }
+    }, [isLoading, messages]);
 
     const listElems = messages.map((message, index) => (
         <ChatBubble
@@ -37,12 +86,24 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             onRefresh={onRefresh}
             onContinue={onContinue}
             isLoading={isLoading}
-            isLast={index === messages.length-1}
+            isLast={index === messages.length - 1}
             editingIndex={editingIndex}
             setEditingIndex={setEditingIndex}
             llmConfig={llmConfig}
         />
     ));
+
+    if(overflowAnchor === 'none'){
+        useEffect(() => {
+            checkAtBottom();
+        }, [messages]);
+    }
+
+    const handleScroll = useCallback(() => {
+        checkAtBottom();
+    }, []);
+
+    console.log(flexDirection);
 
     return (
         <Container
@@ -53,13 +114,17 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 marginTop: '10px',
                 marginBottom: '10px',
                 display: 'flex',
-                flexDirection: 'column-reverse',
+                flexDirection: flexDirection,
+                overflowAnchor: overflowAnchor,
             }}
+            onScroll={overflowAnchor === 'none' ? handleScroll : null}
         >
-            <div style={{ flexGrow: 1 }}></div> {/* Spacer div */}
-            <ListGroup ref={listGroupRef} style={{ flexDirection: 'column' }}>
-                {listElems}
-            </ListGroup>
+            <div style={{ flexDirection: 'column', flexGrow: 1 }}>
+                <ListGroup ref={listGroupRef} style={{ flexDirection: 'column' }}>
+                    {listElems}
+                </ListGroup>
+                <div ref={spacerRef} style={{ flexGrow: 1 }}></div> {/* Spacer div */}
+            </div>
         </Container>
     );
 };
