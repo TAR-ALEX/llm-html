@@ -29,7 +29,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   }, [wholeMessages]);
 
   useEffect(() => {
-    setWholeMessages(messages);
+    if(isLoading === false) setWholeMessages(messages);
   }, [isLoading]);
 
   const fetchAssistantResponse = useCallback(async (
@@ -59,10 +59,16 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       thinkingTokens: llmConfig.thinking_escapes,
       dangerouslyAllowBrowser: true,
       baseURL: llmConfig.baseURL,
+      completionsPath: llmConfig.completionsPath,
+      chatCompletionsPath: llmConfig.chatCompletionsPath,
+      templatePath: llmConfig.templatePath,
+      propsPath: llmConfig.propsPath,
+      allowPrefixingChat: llmConfig.chatCompletionsPrefixAllowed ?? false,
+      defaultChatTemplate: llmConfig.chatTemplate,
     });
 
     try {
-      const stream = await openai.chat.completions.create({
+      const stream = await openai.automatic.chat.completions.create({
         messages: messagesHistory.map((m) => {
             return {
                 role: m.sender,//== "user" ? "user" : "assistant"

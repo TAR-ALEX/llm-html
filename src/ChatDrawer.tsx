@@ -3,9 +3,9 @@ import OpenAI from 'openai';
 import LLMChat, { LLMChatProps } from './LLMChat';
 import hash from 'object-hash';
 import { v4 as uuidv4 } from 'uuid';
-import { Button, ListGroup, Form, Navbar, Offcanvas, Stack, Row, Col, Container, ButtonGroup } from 'react-bootstrap';
+import { Button, ListGroup, Navbar, Offcanvas, Stack, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPencil, faBars, faCaretDown, faGears, faGear, faSave, faChevronCircleLeft, faChevronLeft } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons';
 import LLMConfigForm from './LLMConfigForm';
 import { LLMConfig } from './LLMConfig';
 import ConfigPresetItem from './ConfigPresetItem';
@@ -20,7 +20,8 @@ function generateDefaultLLMConfig() {
     return {
         id: uuidv4(),
         name: `Default`,
-        baseURL: "http://localhost:8080/v1/chat/completions",
+        baseURL: "http://localhost:8080",
+        chatCompletionsPath: "/v1/chat/completions",
         defaultSystemPrompt: "You are a helpful assistant.",
     };
 }

@@ -238,9 +238,15 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       // Only set default if the field isn't in initialState
       if (acc[field.name] === undefined) {
         acc[field.name] = field.placeholder !== undefined ? field.placeholder : '';
-      }else if(getType[field.name] === 'json'){
-        // if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name], null, 2);
-        if(acc[field.name] !== '') acc[field.name] = JSON.stringify(acc[field.name]);
+      } else if (getType[field.name] === 'json') {
+        if (acc[field.name] !== '') {
+          const jsonString = JSON.stringify(acc[field.name]);
+          if (jsonString.length > 75) {
+            acc[field.name] = JSON.stringify(acc[field.name], null, 2);
+          } else {
+            acc[field.name] = jsonString;
+          }
+        }
       }
       // else if(getType[field.name] === 'boolean'){
       //   acc[field.name] = acc[field.name] ? 'true' : 'false';

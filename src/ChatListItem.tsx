@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button, ListGroup, Form, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPencil, faSave} from '@fortawesome/free-solid-svg-icons';
@@ -12,9 +12,17 @@ const ChatListItem: React.FC<{
     onRename: (newName: string) => void;
     onDelete: () => void;
 }> = ({ chat, isSelected, onSelect, onRename, onDelete }) => {
+    const inputRef = useRef(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState(chat.name);
     const saveButtonRef = useRef<HTMLButtonElement>(null);
+
+    useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.focus();
+            inputRef.current.select();
+        }
+    }, [isEditing]);
 
     const handleRename = () => {
         if (editedName.trim()) {
@@ -52,6 +60,7 @@ const ChatListItem: React.FC<{
                         onKeyDown={(e) => e.key === 'Enter' && handleRename()}
                         autoFocus
                         className="me-2"
+                        ref={inputRef} // Add ref to the input
                     />
                 ) : (
                     <Button

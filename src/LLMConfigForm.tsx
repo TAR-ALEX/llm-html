@@ -3,8 +3,15 @@ import { Container, Row } from 'react-bootstrap';
 import FormComponent from './FormComponent';
 import { placeholder } from '@codemirror/view';
 
+interface LLMConfigFormProps {
+  initialState: any; // Replace 'any' with the actual type if known
+  onSubmit: (data: any) => void; // Replace 'any' with the actual type if known
+  onDuplicate: (data: any) => void; // Replace 'any' with the actual type if known
+  onCancel: () => void;
+}
+
 // Testing component
-const LLMConfigForm = ({initialState, onSubmit, onDuplicate, onCancel}) => {
+const LLMConfigForm: React.FC<LLMConfigFormProps> = ({ initialState, onSubmit, onDuplicate, onCancel }) => {
   return(
   <Container fluid className="h-100 d-flex flex-column">
     {/* <Row><h1 className="text-center my-4">LLM Configuration Generator</h1><div /></Row> */}
@@ -29,8 +36,48 @@ const llmConfigSchema = [
         name: 'baseURL',
         label: 'API URL',
         type: 'text',
-        placeholder: 'http://localhost:8080/v1/chat/completions',
+        placeholder: 'http://localhost:8080',
         description: 'Url of the openai compatible endpooint supporting /completions',
+      },
+      {
+        name: 'chatCompletionsPath',
+        label: 'Chat Completions Path',
+        type: 'text',
+        optional: true,
+        placeholder: '/v1/chat/completions',
+        description: 'Path for the chat completions endpoint'
+      },
+      {
+        name: 'chatCompletionsPrefixAllowed',
+        label: 'Chat Prefixing',
+        type: 'boolean',
+        optional: true,
+        placeholder: false,
+        description: 'Continue the assistants response by adding `"prefix": True` to the json, (works with deepseek and mistral APIs, not llama.cpp https://github.com/ggml-org/llama.cpp/issues/11536)'
+      },
+      {
+        name: 'completionsPath',
+        label: 'Completions Path',
+        type: 'text',
+        optional: true,
+        placeholder: '/v1/completions',
+        description: 'path for the completions endpoint',
+      },
+      {
+        name: 'templatePath',
+        label: 'Template Path',
+        type: 'text',
+        optional: true,
+        placeholder: '/apply-template',
+        description: 'Path for applying templates'
+      },
+      {
+        name: 'propsPath',
+        label: 'Props Path',
+        type: 'text',
+        optional: true,
+        placeholder: '/props',
+        description: 'Path for props'
       },
       {
         name: 'apiKey',
@@ -76,6 +123,14 @@ const llmConfigSchema = [
         optional: true,
         description: 'Remove Thinking from API calls. Model does not see its previous thought process making context longer. False if disabled',
         placeholder: "false",
+      },
+      {
+        name: 'chatTemplate',
+        label: 'Chat Template',
+        type: 'json',
+        optional: true,
+        description: 'Jinja Chat Template (huggingface style) for the legacy /completion API',
+        placeholder: "{\r\n  \"chat_template\": \"{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{% set ns = namespace(is_first=false, is_tool=false, is_output_first=true, system_prompt='', is_first_sp=true) %}{%- for message in messages %}{%- if message['role'] == 'system' %}{%- if ns.is_first_sp %}{% set ns.system_prompt = ns.system_prompt + message['content'] %}{% set ns.is_first_sp = false %}{%- else %}{% set ns.system_prompt = ns.system_prompt + '\\\\n\\\\n' + message['content'] %}{%- endif %}{%- endif %}{%- endfor %}{{ bos_token }}{{ ns.system_prompt }}{%- for message in messages %}{%- if message['role'] == 'user' %}{%- set ns.is_tool = false -%}{{'<\uFF5CUser\uFF5C>' + message['content']}}{%- endif %}{%- if message['role'] == 'assistant' and 'tool_calls' in message %}{%- set ns.is_tool = false -%}{%- for tool in message['tool_calls'] %}{%- if not ns.is_first %}{%- if message['content'] is none %}{{'<\uFF5CAssistant\uFF5C><\uFF5Ctool\u2581calls\u2581begin\uFF5C><\uFF5Ctool\u2581call\u2581begin\uFF5C>' + tool['type'] + '<\uFF5Ctool\u2581sep\uFF5C>' + tool['function']['name'] + '\\\\n' + '```json' + '\\\\n' + tool['function']['arguments'] + '\\\\n' + '```' + '<\uFF5Ctool\u2581call\u2581end\uFF5C>'}}{%- else %}{{'<\uFF5CAssistant\uFF5C>' + message['content'] + '<\uFF5Ctool\u2581calls\u2581begin\uFF5C><\uFF5Ctool\u2581call\u2581begin\uFF5C>' + tool['type'] + '<\uFF5Ctool\u2581sep\uFF5C>' + tool['function']['name'] + '\\\\n' + '```json' + '\\\\n' + tool['function']['arguments'] + '\\\\n' + '```' + '<\uFF5Ctool\u2581call\u2581end\uFF5C>'}}{%- endif %}{%- set ns.is_first = true -%}{%- else %}{{'\\\\n' + '<\uFF5Ctool\u2581call\u2581begin\uFF5C>' + tool['type'] + '<\uFF5Ctool\u2581sep\uFF5C>' + tool['function']['name'] + '\\\\n' + '```json' + '\\\\n' + tool['function']['arguments'] + '\\\\n' + '```' + '<\uFF5Ctool\u2581call\u2581end\uFF5C>'}}{%- endif %}{%- endfor %}{{'<\uFF5Ctool\u2581calls\u2581end\uFF5C><\uFF5Cend\u2581of\u2581sentence\uFF5C>'}}{%- endif %}{%- if message['role'] == 'assistant' and 'tool_calls' not in message %}{%- if ns.is_tool %}{{'<\uFF5Ctool\u2581outputs\u2581end\uFF5C>' + message['content'] + '<\uFF5Cend\u2581of\u2581sentence\uFF5C>'}}{%- set ns.is_tool = false -%}{%- else %}{% set content = message['content'] %}{% if '<\/think>' in content %}{% set content = content.split('<\/think>')[-1] %}{% endif %}{{'<\uFF5CAssistant\uFF5C>' + content + '<\uFF5Cend\u2581of\u2581sentence\uFF5C>'}}{%- endif %}{%- endif %}{%- if message['role'] == 'tool' %}{%- set ns.is_tool = true -%}{%- if ns.is_output_first %}{{'<\uFF5Ctool\u2581outputs\u2581begin\uFF5C><\uFF5Ctool\u2581output\u2581begin\uFF5C>' + message['content'] + '<\uFF5Ctool\u2581output\u2581end\uFF5C>'}}{%- set ns.is_output_first = false %}{%- else %}{{'<\uFF5Ctool\u2581output\u2581begin\uFF5C>' + message['content'] + '<\uFF5Ctool\u2581output\u2581end\uFF5C>'}}{%- endif %}{%- endif %}{%- endfor -%}{% if ns.is_tool %}{{'<\uFF5Ctool\u2581outputs\u2581end\uFF5C>'}}{% endif %}{% if add_generation_prompt and not ns.is_tool %}{{'<\uFF5CAssistant\uFF5C><think>\\\\n'}}{% endif %}\",\r\n  \"eos_token\": \"<\uFF5Cend\u2581of\u2581sentence\uFF5C>\",\r\n  \"bos_token\": \"<\uFF5Cbegin\u2581of\u2581sentence\uFF5C>\"\r\n}",
       },
       {
         name: 'temperature',

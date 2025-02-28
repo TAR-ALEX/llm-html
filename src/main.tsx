@@ -9,6 +9,7 @@ const Root = () => {
     const setThemeBasedOnSystemPreference = () => {
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
       document.body.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+      // document.body.setAttribute('data-bs-theme', 'light');
     };
 
     // In your updateBodySize function:

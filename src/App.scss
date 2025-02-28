@@ -1,9 +1,14 @@
 // @include color-scheme(light) {
 //     $primary: #99ff00;
 // }
+
+
+// $primary: purple;
+
 @import "bootstrap/scss/functions"; 
 @import "bootstrap/scss/variables";
 @import "bootstrap/scss/mixins";
+
 
 // [data-bs-theme="custom"] {
 //     color-scheme: dark;

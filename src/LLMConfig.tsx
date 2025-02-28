@@ -4,10 +4,16 @@ export type LLMConfig = {
   id: string;
   name: string;
   baseURL: string;
+  completionsPath?: string,
+  chatCompletionsPath?: string,
+  chatCompletionsPrefixAllowed?: boolean,
+  templatePath?: string,
+  propsPath?: string,
   apiKey?: string;
   model?: string;
   thinking_escapes?: any;
   mask_thinking?: boolean;
+  chatTemplate?: any;
   temperature?: number;
   top_k?: number;
   top_p?: number;
@@ -54,27 +60,65 @@ export type LLMConfig = {
   stream?: boolean;
 }
 
-export type LLMConfigChat = Omit<LLMConfig, 'id' | 'name' | 'baseURL' | 'apiKey' | 'defaultSystemPrompt' | 'thinking_escapes' | 'mask_thinking'>;
+export type LLMConfigChat = Pick<LLMConfig, 'model' | 'temperature' | 'top_k' | 'top_p' | 'min_p' | 'n_predict' | 'stop' | 'typical_p' | 'n_keep' | 'n_indent' | 'dynatemp_range' | 'dynatemp_exponent' | 'mirostat' | 'mirostat_tau' | 'mirostat_eta' | 'repeat_penalty' | 'repeat_last_n' | 'presence_penalty' | 'frequency_penalty' | 'dry_multiplier' | 'dry_base' | 'dry_allowed_length' | 'dry_penalty_last_n' | 'dry_sequence_breakers' | 'xtc_probability' | 'xtc_threshold' | 'grammar' | 'json_schema' | 'seed' | 'ignore_eos' | 'logit_bias' | 'n_probs' | 'min_keep' | 't_max_predict_ms' | 'id_slot' | 'cache_prompt' | 'return_tokens' | 'samplers' | 'timings_per_token' | 'post_sampling_probs' | 'response_fields' | 'lora' | 'include_reasoning' | 'stream' >;
 // export type LLMConfigAPI = Pick<LLMConfig, 'id' | 'name' | 'baseURL' | 'apiKey'>;
 
 export function maskToLLMConfigChat(config: LLMConfig): LLMConfigChat {
-  var { id, name, baseURL, apiKey, defaultSystemPrompt, thinking_escapes, mask_thinking, ...chatConfig } = config;
+  var prop = [
+    'model',
+    'temperature',
+    'top_k',
+    'top_p',
+    'min_p',
+    'n_predict',
+    'stop',
+    'typical_p',
+    'n_keep',
+    'n_indent',
+    'dynatemp_range',
+    'dynatemp_exponent',
+    'mirostat',
+    'mirostat_tau',
+    'mirostat_eta',
+    'repeat_penalty',
+    'repeat_last_n',
+    'presence_penalty',
+    'frequency_penalty',
+    'dry_multiplier',
+    'dry_base',
+    'dry_allowed_length',
+    'dry_penalty_last_n',
+    'dry_sequence_breakers',
+    'xtc_probability',
+    'xtc_threshold',
+    'grammar',
+    'json_schema',
+    'seed',
+    'ignore_eos',
+    'logit_bias',
+    'n_probs',
+    'min_keep',
+    't_max_predict_ms',
+    'id_slot',
+    'cache_prompt',
+    'return_tokens',
+    'samplers',
+    'timings_per_token',
+    'post_sampling_probs',
+    'response_fields',
+    'lora',
+    'include_reasoning',
+    'stream',
+  ];
 
+  var configCopy = {...config};
+  for (var k in configCopy) {
+      if (prop.indexOf(k) < 0) {
+          delete configCopy[k];
+      }
+  }
 
-  // if (typeof chatConfig.samplers === 'string') {
-  //   try {
-  //     const parsedSamplers = JSON.parse(chatConfig.samplers);
-  //     if (Array.isArray(parsedSamplers) && parsedSamplers.every(item => typeof item === 'string')) {
-  //       chatConfig.samplers = parsedSamplers;
-  //     } else {
-  //       throw new Error('Invalid samplers JSON format');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error parsing samplers JSON:', error);
-  //   }
-  // }
-
-  return chatConfig;
+  return configCopy;
 }
 
 export function getThinkingStartAndEnd(llmConfig: LLMConfig) {
@@ -113,11 +157,11 @@ export function removeThinkingTokens(
   const { thinkingStart, thinkingEnd } = thinkingTokens;
 
   // Create a deep copy of the messageStructure array
-  const updatedMessages = messageStructure.map((message) => {
+  const updatedMessages = messageStructure.map((message, index) => {
     // Create a new message object with copied properties
     const newMessage = { ...message };
 
-    if (newMessage.sender === "assistant") {
+    if (index !== messageStructure.length - 1 && newMessage.sender === "assistant") {
       let cleanedContent = "";
       const sections = newMessage.content.split(thinkingStart);
       
