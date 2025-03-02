@@ -22,7 +22,7 @@ const CollapsibleAlert = ({ variant, title, children }) => {
       setIsOpen((prev) => !prev);
       timeoutRef.current = setTimeout(() => {
         timeoutRef.current = null;
-      }, 700);
+      }, 500);
     }
   };
 

@@ -52,8 +52,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     const [flexDirection, setFlexDirection] = useState<Property.FlexDirection>('column-reverse');
 
     const overflowAnchor: Property.OverflowAnchor = supportsOverflowAnchor() ? 'auto' : 'none';
+    //const overflowAnchor: Property.OverflowAnchor = 'none';
 
-    const checkAtBottom = useCallback(() => {
+    const checkAtBottom = () => {
         if (containerRef.current) {   
             setFlexDirection((fd) => {         
                 var distFromBottom = 0;
@@ -64,17 +65,16 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 }
                 var newVal: Property.FlexDirection = distFromBottom <= 5 ? 'column-reverse' : 'column';
 
-                //if(!isLoading) return fd;
+                // if(!isLoading) newVal = 'column';
 
-                if(fd != newVal && newVal === "column") {
+                if(fd !== newVal && newVal === "column") {
                     containerRef.current.style.flexDirection = 'column';
-                    containerRef.current.scrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight - 10;
+                    containerRef.current.scrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight - 15;
                 }
 
                 return newVal;
             });
-        }
-    }, [isLoading, messages]);
+    }};
 
     const listElems = messages.map((message, index) => (
         <ChatBubble
@@ -96,12 +96,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     if(overflowAnchor === 'none'){
         useEffect(() => {
             checkAtBottom();
-        }, [messages]);
+        }, [messages, isLoading]);
     }
 
     const handleScroll = useCallback(() => {
         checkAtBottom();
-    }, []);
+    }, [isLoading, messages]);
 
     return (
         <Container

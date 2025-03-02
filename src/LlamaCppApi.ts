@@ -316,24 +316,40 @@ class LLMApi {
           if (!this.config.baseURL) {
             throw new Error(`Failure: base URL is not defined.`);
           }
-          if(this.config.defaultChatTemplate && !this.config.completionsPath){
-            throw new Error(`Failure: To use a custom chat template, you need to have a /v1/completions endpoint specified.`);
+
+          var useLegacyCompletions = false;
+
+          if(!this.config.chatCompletionsPath){
+            useLegacyCompletions = true;
+            if(!this.config.completionsPath){
+              throw new Error(`Failure: define a supported API path in the config, for example: /v1/chat/completions or /v1/completions`);
+            }
+          }else if(this.config.defaultChatTemplate){
+            useLegacyCompletions = true;
+            if(!this.config.completionsPath){
+              throw new Error(`Failure: To use a custom chat template, you need to have a /v1/completions endpoint specified.`);
+            }
+          }else if(!this.config.allowPrefixingChat && params.messages[params.messages.length-1].role === 'assistant'){
+            useLegacyCompletions = true;
+            if(!this.config.completionsPath){
+              throw new Error(`Failure: To continue an assistant message, you need to have a /v1/completions endpoint specified or have 'Chat Prefixing' enabled for /v1/chat/completions.`);
+            }
           }
-          if (this.config.chatCompletionsPath && !this.config.defaultChatTemplate) {
+
+          if (!useLegacyCompletions) {
             return this.chat.completions.create(params, options);
-          }else if (this.config.completionsPath) {
+          } else {
             if(this.config.defaultChatTemplate) {
               var template = this.config.defaultChatTemplate!;
               return this.virtual.completionsWithTemplate.create(params, template, options);
+            }else if (this.config.templatePath) {
+              return this.virtual.completionsApplyTemplate.create(params, options);
             } else if (this.config.propsPath) {
               let data = await this.props.get(); 
               return this.virtual.completionsWithTemplate.create(params, data, options);
-            } else if (this.config.templatePath) {
-              return this.virtual.completionsApplyTemplate.create(params, options);
-            }
-            throw new Error(`Failure: Could not obtain a chat template for completion API`);
+            } 
+            throw new Error(`Failure: Could not get a chat template for /v1/completions. try setting a template path, ot a chat template.`);
           }
-          throw new Error(`Failure: define a supported API path in the config, for example: /v1/chat/completions`);
         }
       }
     }
