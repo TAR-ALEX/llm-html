@@ -332,7 +332,13 @@ class LLMApi {
           }else if(!this.config.allowPrefixingChat && params.messages[params.messages.length-1].role === 'assistant'){
             useLegacyCompletions = true;
             if(!this.config.completionsPath){
-              throw new Error(`Failure: To continue an assistant message, you need to have a /v1/completions endpoint specified or have 'Chat Prefixing' enabled for /v1/chat/completions.`);
+              throw new Error(`Failure: To continue/prefix an assistant message, you need to have a /v1/completions endpoint specified or have 'Chat Prefixing' enabled for /v1/chat/completions.`);
+            }
+          }
+
+          if(params.messages[params.messages.length-1].role === 'assistant'){
+            if(params.grammar || params.json_schema){
+              throw new Error(`Error: Cannot continue an assistant message, when a grammar/json_schema is specified, prefix portion will not follow any rules.`);
             }
           }
 
@@ -348,7 +354,7 @@ class LLMApi {
               let data = await this.props.get(); 
               return this.virtual.completionsWithTemplate.create(params, data, options);
             } 
-            throw new Error(`Failure: Could not get a chat template for /v1/completions. try setting a template path, ot a chat template.`);
+            throw new Error(`Failure: Could not get a chat template for /v1/completions. try setting a template path, or a chat template.`);
           }
         }
       }
@@ -422,7 +428,7 @@ class LLMApi {
         if(result.startsWith(template.bos_token)){
           result = result.substring(template.bos_token.length);
         }
-        
+
         let splitText = result.split(endTruncateToken)
 
         if(splitText.length <= 0){

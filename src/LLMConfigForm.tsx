@@ -56,6 +56,14 @@ const llmConfigSchema = [
         description: 'Continue the assistants response by adding `"prefix": True` to the json, (works with deepseek and mistral APIs, not llama.cpp https://github.com/ggml-org/llama.cpp/issues/11536)'
       },
       {
+        name: 'responsePrefix',
+        label: 'Default Response Prefix',
+        type: 'textarea',
+        optional: true,
+        placeholder: "<think>\n",
+        description: 'use this to force a model into starting <think>\n tags or whatever you desire.'
+      },
+      {
         name: 'completionsPath',
         label: 'Completions Path',
         type: 'text',

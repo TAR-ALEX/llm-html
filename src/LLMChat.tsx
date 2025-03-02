@@ -13,7 +13,9 @@ export type LLMChatProps = {
   onError?: (header: string, content: string) => void;
 };
 
-const newAssistantStarter = { sender: 'assistant', content: '' };
+function newAssistantStarter(content?: string) {
+  return { sender: 'assistant', content: content ?? "" };
+}
 
 const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
@@ -156,9 +158,10 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       if (!isTargetMessageAssistant) targetMessageIndex += 1;
       let messagesHistory = currentMessages.slice(0, targetMessageIndex);
       if (targetMessageIndex > messagesHistory.length - 1) {
-        messagesHistory = [...messagesHistory, newAssistantStarter];
+        messagesHistory = [...messagesHistory, newAssistantStarter(llmConfig.responsePrefix)];
+      }else{
+        messagesHistory[messagesHistory.length - 1].content = llmConfig.responsePrefix;
       }
-      messagesHistory[messagesHistory.length - 1].content = '';
 
       await fetchAssistantResponse(messagesHistory);
     },
@@ -179,7 +182,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     if (!newMessageContent || isLoading) return;
 
     const newUserMessage = { sender: 'user', content: newMessageContent };
-    const updatedMessages = [...messages, newUserMessage, newAssistantStarter];
+    const updatedMessages = [...messages, newUserMessage, newAssistantStarter(llmConfig.responsePrefix)];
 
     setNewMessage('');
     setTimeout(() => inputRef.current?.focus(), 0);
