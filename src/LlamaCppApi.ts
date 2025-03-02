@@ -419,6 +419,10 @@ class LLMApi {
           strftime_now: strftime_now,
         });
 
+        if(result.startsWith(template.bos_token)){
+          result = result.substring(template.bos_token.length);
+        }
+        
         let splitText = result.split(endTruncateToken)
 
         if(splitText.length <= 0){
