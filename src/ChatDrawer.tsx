@@ -9,8 +9,10 @@ import { faBars, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons'
 import LLMConfigForm from './LLMConfigForm';
 import { LLMConfig } from './LLMConfig';
 import ConfigPresetItem from './ConfigPresetItem';
-import { Chat, loadChats, loadSelectedChatId, saveSelectedChatId, loadConfigPresets, addChat, deleteChat, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadSelectedConfigId, saveSelectedConfigId } from './storage';
+import { Chat, loadChats, loadSelectedChatId, saveSelectedChatId, loadConfigPresets, addChat, deleteChat, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadSelectedConfigId, saveSelectedConfigId, loadAppConfig, saveAppConfig } from './storage';
 import ChatListItem from './ChatListItem';
+import AppConfigForm from './AppConfigForm';
+import { AppConfig, defaultAppConfig } from './AppConfig';
 
 interface ChatDrawerInterface {
     onError?: (header: string, content: string) => void;
@@ -34,16 +36,22 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
     const [showRightDrawer, setShowRightDrawer] = useState(false);
     const [rightDrawerView, setRightDrawerView] = useState("llm-presets");
     const [defaultSelectedConfig, setDefaultSelectedConfig] = useState<LLMConfig>(configPresets[0]);
+    const [inputValue, setInputValue] = useState<string>("");
+    const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
 
     const selectedChat = chats.find(chat => chat.id === selectedChatId);
     const selectedConfig = selectedChat ? configPresets.find(config => config.id === selectedChat.configId) : defaultSelectedConfig;
-    const configHash = selectedConfig ? hash(selectedConfig) : 'default-hash';
 
     useEffect(()=> {
+        var cfg = loadAppConfig();
+        setAppConfig(cfg ?? defaultAppConfig);
         setSelectedChatId(loadSelectedChatId());
         setConfigPresets(loadConfigPresets());
         setChats(loadChats());
     }, []);
+
+    useEffect(()=> {
+    }, [appConfig]);
 
     const createNewChat = () => {
         if (configPresets.length === 0 || !selectedConfig) {
@@ -146,6 +154,15 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
             setRightDrawerView("llm-presets");
             setShowRightDrawer(true);
         }, 400);
+    };
+
+    const handleAppSettingsCancel = () => {
+        setShowRightDrawer(false);
+    };
+    const handleAppSettingsSave = (config: AppConfig) => {
+        saveAppConfig(config);
+        setAppConfig(config);
+        setShowRightDrawer(false);
     };
 
     const handleDeleteConfigPreset = (configId: string) => {
@@ -257,7 +274,12 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                 {rightDrawerView !== 'llm-presets' ? (
                     rightDrawerView === 'settings' ? (
                         <Offcanvas.Body>
-                            TODO: this will have themes, various settings such as hiding/showing thinking tabs by default and maybe some other gui configurations
+                            <AppConfigForm
+                                initialState={appConfig}
+                                onSubmit={handleAppSettingsSave}
+                                onCancel={() => handleAppSettingsCancel()}
+                            />
+                            {/* TODO  */}
                         </Offcanvas.Body>
                     ) : (
                         <Offcanvas.Body>
@@ -300,11 +322,14 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
             <div className="flex-grow-1 position-relative bg-body-tertiary" style={{ minHeight: 0 }}>
                 {selectedChat && selectedConfig ? (
                     <LLMChat
-                        key={`${selectedChatId}-${configHash}`}
+                        key={`${selectedChatId}`}
+                        appConfig={appConfig}
                         llmConfig={selectedConfig}
                         initialMessages={selectedChat.messages}
                         onMessagesChange={handleMessagesChange}
                         onError={onError}
+                        inputValue={inputValue}
+                        onInputValueChange={setInputValue}
                     />
                 ) : selectedConfig ? (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">

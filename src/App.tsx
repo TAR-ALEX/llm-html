@@ -42,11 +42,9 @@ function App() {
         </Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <p>
-          <div style={{ whiteSpace: 'pre-wrap' }}>
-            {modalMessage.content ?? ""}
-          </div>
-        </p>
+        <div style={{ whiteSpace: 'pre-wrap' }}>
+          {modalMessage.content ?? ""}
+        </div>
       </Modal.Body>
       {/* <Modal.Footer>
         <Button onClick={props.onHide}>Close</Button>

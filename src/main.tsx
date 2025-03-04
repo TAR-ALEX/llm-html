@@ -2,14 +2,21 @@ import './App.scss';
 import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import { loadAppConfig } from './storage';
 
 const Root = () => {
   useEffect(() => {
     // Theme management
     const setThemeBasedOnSystemPreference = () => {
-      const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.body.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
-      // document.body.setAttribute('data-bs-theme', 'light');
+      const isDarkModeAuto = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var appCfg = loadAppConfig();
+      var themeStr = isDarkModeAuto ? 'dark' : 'light';
+      if(appCfg?.theme == 1){
+        themeStr = 'dark';
+      }else if(appCfg?.theme == 2){
+        themeStr = 'light';
+      }
+      document.body.setAttribute('data-bs-theme', themeStr);
     };
 
     // In your updateBodySize function:

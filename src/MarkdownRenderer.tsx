@@ -15,6 +15,7 @@ import 'katex/dist/katex.min.css';
 import './prestyle.css'
 import { Alert } from 'react-bootstrap';
 import CollapsibleAlert from './CollapsibleAlert';
+import { AppConfig } from './AppConfig';
 
 // Create the memoized component
 const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
@@ -77,11 +78,12 @@ type MarkdownRendererProps = {
   }
   children: string;
   renderCodeEngine?: 'codemirror' | 'syntaxhighlighter' | 'none';
+  appConfig?: AppConfig;
+  isLast?: boolean;
 };
 
-function MarkdownRenderer({ thinkingTokens, children: markdown, renderCodeEngine: mode = 'syntaxhighlighter' }: MarkdownRendererProps) {
+function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
   const segments = parseMarkdown(markdown, thinkingTokens);
-
   return (
     <div>
       {segments.map((segment, index) => {
@@ -117,7 +119,7 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, renderCodeEngine
           );
         } else if (segment.type === 'thinking') {
           return (
-            <CollapsibleAlert key={`code-${index}`} title='Thinking' variant="secondary">
+            <CollapsibleAlert key={`code-${index}`} title='Thinking' variant="secondary" isOpenDefault={isLast?appConfig?.expandThinkingByDefault:false}>
               <div style={{ whiteSpace: 'pre-wrap' }}>
                 {segment.content.trim()}
               </div>

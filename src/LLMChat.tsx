@@ -5,26 +5,52 @@ import ChatInput from './ChatInput';
 import { Message } from './ChatBubble';
 import LLMApi, { ChatCompletion, ChatCompletionChunk } from './LlamaCppApi';
 import { getThinkingStartAndEnd, LLMConfig, maskToLLMConfigChat, removeThinkingTokens } from './LLMConfig';
+import { AppConfig } from './AppConfig';
 
 export type LLMChatProps = {
   llmConfig: LLMConfig;
   onMessagesChange?: (messages: Message[]) => void;
   initialMessages?: Message[];
   onError?: (header: string, content: string) => void;
+  inputValue?: string;
+  onInputValueChange?: (value: string) => void;
+  appConfig?: AppConfig;
 };
 
 function newAssistantStarter(content?: string) {
   return { sender: 'assistant', content: content ?? "" };
 }
 
-const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError }) => {
+const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError, inputValue, onInputValueChange, appConfig }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [wholeMessages, setWholeMessages] = useState<Message[]>(messages);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState(inputValue ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [configId, setConfigId] = useState(llmConfig.id);
+
+  useEffect(() => {
+    if (appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) {
+      setConfigId(llmConfig.id);
+      setMessages((msg) => {
+        var newMsg = [ ...msg ];
+        if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
+          newMsg.shift();
+          if (llmConfig.defaultSystemPrompt) {
+            newMsg.unshift({ sender: 'system', content: llmConfig.defaultSystemPrompt })
+          }
+          setWholeMessages(newMsg);
+        }
+        return newMsg;
+      });
+    }
+  }, [llmConfig, appConfig]);
+
+  useEffect(() => {
+    if (onInputValueChange) onInputValueChange(newMessage);
+  }, [newMessage]);
 
   useEffect(() => {
     onMessagesChange?.(wholeMessages);
@@ -73,7 +99,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       const stream = await openai.automatic.chat.completions.create({
         messages: messagesHistory.map((m) => {
             return {
-                role: m.sender,//== "user" ? "user" : "assistant"
+                role: m.sender,
                 content: m.content,
             };
         }),
@@ -201,6 +227,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         editingIndex={editingIndex}
         setEditingIndex={setEditingIndex}
         llmConfig={llmConfig}
+        appConfig={appConfig}
       />
       <ChatInput
         value={newMessage}

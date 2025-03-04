@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
 import { ListGroup, Form, Button, ButtonGroup, Spinner } from 'react-bootstrap';
 import MarkdownRenderer from './MarkdownRenderer';
 import { getThinkingStartAndEnd, LLMConfig } from './LLMConfig';
+import { AppConfig } from './AppConfig';
 
 export type Message = {
   sender: string;
@@ -20,16 +21,16 @@ interface ChatBubbleInterface {
   editingIndex: number | null;
   setEditingIndex: React.Dispatch<React.SetStateAction<number | null>>;
   llmConfig?: LLMConfig;
+  appConfig?: AppConfig;
 }
 
-const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig }) => {
+const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig, appConfig }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editedContent, setEditedContent] = useState(content);
   const isDisabled = isLoading || (editingIndex !== null && editingIndex !== index);
   const isEditing = editingIndex === index;
   const [oldEditHeight, setOldEditHeight] = useState(25);
-
 
   let thinkingTokens: { thinkingStart: string, thinkingEnd: string } | null = null;
 
@@ -112,7 +113,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
   const classMap = {
     system: 'text-warning-emphasis bg-warning-subtle border border-warning-subtle',
     user: 'text-primary-emphasis bg-primary-subtle border border-primary-subtle',
-    assistant: 'text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle'
+    assistant: appConfig?.borderAssistantMessages === false ?  '': 'text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle'
   };
 
   return (
@@ -123,7 +124,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
     >
       <ListGroup.Item
         className={`${classMap[sender] ?? classMap.assistant} rounded p-3`}
-        style={{ maxWidth: sender === 'system' ? '100%' : '80%', width: '100%' }}
+        style={{ maxWidth: sender === 'system' || (sender === 'assistant' && appConfig?.wideAssistantMessages) ? '100%' : '80%', width: '100%' }}
       >
         {isEditing ? (
           <>
@@ -191,7 +192,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
           </>
         ) : (
           <>
-            <MarkdownRenderer thinkingTokens={thinkingTokens}>{content}</MarkdownRenderer>
+            <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} isLast={isLast}>{content}</MarkdownRenderer>
             <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
                 className='px-3'

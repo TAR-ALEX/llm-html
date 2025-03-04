@@ -1,7 +1,6 @@
 import React from 'react';
 import { Container, Row } from 'react-bootstrap';
 import FormComponent from './FormComponent';
-import { placeholder } from '@codemirror/view';
 
 interface LLMConfigFormProps {
   initialState: any; // Replace 'any' with the actual type if known
@@ -14,7 +13,6 @@ interface LLMConfigFormProps {
 const LLMConfigForm: React.FC<LLMConfigFormProps> = ({ initialState, onSubmit, onDuplicate, onCancel }) => {
   return(
   <Container fluid className="h-100 d-flex flex-column">
-    {/* <Row><h1 className="text-center my-4">LLM Configuration Generator</h1><div /></Row> */}
     <Row className="flex-grow-1 overflow-auto"><FormComponent formConfig={llmConfigSchema} initialState={initialState} onSubmit={onSubmit} onDuplicate={onDuplicate} onCancel={onCancel} /></Row>
   </Container>
   )};

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { isMobile } from 'react-device-detect';
 
@@ -58,4 +58,4 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onChange, onSend, onStop, 
   );
 };
 
-export default ChatInput;
+export default memo(ChatInput);

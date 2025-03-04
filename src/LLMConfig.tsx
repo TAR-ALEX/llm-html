@@ -7,6 +7,7 @@ export type LLMConfig = {
   completionsPath?: string,
   chatCompletionsPath?: string,
   chatCompletionsPrefixAllowed?: boolean,
+  responsePrefix?: string,
   templatePath?: string,
   propsPath?: string,
   apiKey?: string;

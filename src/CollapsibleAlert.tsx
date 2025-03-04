@@ -1,10 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, ReactNode } from 'react';
 import { Alert, Collapse } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons';
 
-const CollapsibleAlert = ({ variant, title, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
+interface CollapsibleAlertProps {
+  variant: string;
+  title: string;
+  children: ReactNode;
+  isOpenDefault?: boolean;
+}
+
+const CollapsibleAlert: React.FC<CollapsibleAlertProps> = ({ variant, title, children, isOpenDefault }) => {
+  const [isOpen, setIsOpen] = useState(isOpenDefault ?? false);
   const timeoutRef = useRef(null);
 
   // Cleanup timeout on component unmount
@@ -22,7 +29,7 @@ const CollapsibleAlert = ({ variant, title, children }) => {
       setIsOpen((prev) => !prev);
       timeoutRef.current = setTimeout(() => {
         timeoutRef.current = null;
-      }, 500);
+      }, 600);
     }
   };
 

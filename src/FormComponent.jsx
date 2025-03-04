@@ -262,7 +262,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     formConfig.forEach(section => {
       section.fields.forEach(field => {
         // Check if computedInitialState has a value and use it to determine the enabled state
-        if (initialState[field.name] !== undefined) {
+        if (initialState && initialState[field.name] !== undefined) {
           initialEnabled[field.name] = true;
         } else {
           // Fallback to the original logic
@@ -382,18 +382,20 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     }, {});
 
     // Ensure all initialState fields exist in filteredData
-    Object.keys(initialState).forEach(key => {
-      if (!(key in filteredData) && !(key in enabledFields)) {
-        filteredData[key] = initialState[key];
-      }
-    });
+    if(initialState){
+      Object.keys(initialState).forEach(key => {
+        if (!(key in filteredData) && !(key in enabledFields)) {
+          filteredData[key] = initialState[key];
+        }
+      });
+    }
     return filteredData;
   }
 
   const handleSaveDup = () => {
     let result = computeResult();
     console.log('made dup config:', result, enabledFields);
-    onDuplicate(result);
+    if(onDuplicate) onDuplicate(result);
   }
 
   const handleSubmit = (e) => {
@@ -448,9 +450,11 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       <Button variant="primary" type="submit">
         Save
       </Button>
-      <Button variant="warning" onClick={handleSaveDup}>
-        Save Copy
-      </Button>
+      {(onDuplicate) ?
+        <Button variant="warning" onClick={handleSaveDup}>
+          Save Copy
+        </Button> : <></>
+      }
       <Button variant="secondary" onClick={handleCancel}>
         Cancel
       </Button>

@@ -1,5 +1,6 @@
 import { LLMConfig } from "./LLMConfig";
 import { LLMChatProps } from "./LLMChat";
+import { AppConfig } from "./AppConfig";
 
 export interface Chat {
     configId: string; // Reference to the LLMConfig id
@@ -138,6 +139,25 @@ export const loadSelectedConfigId = (): string | null => {
     console.log('Selected config ID:', savedId);
     return savedId || null;
 };
+
+export const loadAppConfig = (): AppConfig | null => {
+    console.log('Loading app config...');
+    const config = safeJsonParse<AppConfig>(localStorage.getItem('llm-html-app-config'));
+    console.log('App config:', config);
+    return config || null;
+};
+
+export const saveAppConfig = (appConfig: AppConfig | null) => {
+    console.log('Saving app config to localStorage...');
+    if (appConfig) {
+        localStorage.setItem('llm-html-app-config', JSON.stringify(appConfig));
+        console.log('App config saved successfully.');
+    } else {
+        localStorage.removeItem('llm-html-app-config');
+        console.log('App config removed successfully.');
+    }
+};
+
 
 // Save the selected config ID to localStorage
 export const saveSelectedConfigId = (selectedConfigId: string | null) => {

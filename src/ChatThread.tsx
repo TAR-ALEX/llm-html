@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useCallback, useState, memo } from 'react';
-import { Container, ListGroup } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import ChatBubble, { Message } from './ChatBubble';
 import { LLMConfig } from './LLMConfig';
 import { Property } from 'csstype';
+import { AppConfig } from './AppConfig';
 
 /**
  * Detects support for the CSS overflow-anchor property.
@@ -34,6 +35,7 @@ export type ChatThreadProps = {
     editingIndex: number | null;
     setEditingIndex: React.Dispatch<React.SetStateAction<number | null>>;
     llmConfig?: LLMConfig;
+    appConfig?: AppConfig;
 };
 
 const ChatThread: React.FC<ChatThreadProps> = ({
@@ -45,6 +47,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     editingIndex,
     setEditingIndex,
     llmConfig,
+    appConfig,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const spacerRef = useRef<HTMLDivElement>(null);
@@ -76,8 +79,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             });
     }};
 
-    const listElems = messages.map((message, index) => (
-        <ChatBubble
+    const listElems = messages.map((message, index) => {
+        if(appConfig?.showSystemPrompt === false && message.sender === "system"){
+            return;
+        }
+        return <ChatBubble
             key={index}
             index={index}
             sender={message.sender}
@@ -86,12 +92,13 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             onRefresh={onRefresh}
             onContinue={onContinue}
             isLoading={isLoading}
-            isLast={index === messages.length - 1}
+            isLast={index >= messages.length - 1}
             editingIndex={editingIndex}
             setEditingIndex={setEditingIndex}
             llmConfig={llmConfig}
+            appConfig={appConfig}
         />
-    ));
+    });
 
     if(overflowAnchor === 'none'){
         useEffect(() => {
@@ -118,9 +125,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             onScroll={overflowAnchor === 'none' ? handleScroll : null}
         >
             <div style={{ flexDirection: 'column', flexGrow: 1 }}>
-                <ListGroup ref={listGroupRef} style={{ flexDirection: 'column' }}>
+                <div ref={listGroupRef} style={{ flexDirection: 'column' }}>
                     {listElems}
-                </ListGroup>
+                </div>
                 <div ref={spacerRef} style={{ flexGrow: 1 }}></div> {/* Spacer div */}
             </div>
         </Container>
