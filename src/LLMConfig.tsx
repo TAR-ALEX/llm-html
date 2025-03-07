@@ -6,7 +6,7 @@ export type LLMConfig = {
   baseURL: string;
   completionsPath?: string,
   chatCompletionsPath?: string,
-  chatCompletionsPrefixAllowed?: boolean,
+  chatCompletionsPrefixAllowed?: number, // 0 = none, 1 = Prefix true, 2 = continue_final_message, 3 = implied by having assistant.
   responsePrefix?: string,
   templatePath?: string,
   propsPath?: string,

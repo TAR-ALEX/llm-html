@@ -38,11 +38,11 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         var newMsg = [ ...msg ];
         if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
           newMsg.shift();
-          if (llmConfig.defaultSystemPrompt) {
-            newMsg.unshift({ sender: 'system', content: llmConfig.defaultSystemPrompt })
-          }
-          setWholeMessages(newMsg);
         }
+        if (llmConfig.defaultSystemPrompt) {
+          newMsg.unshift({ sender: 'system', content: llmConfig.defaultSystemPrompt })
+        }
+        setWholeMessages(newMsg);
         return newMsg;
       });
     }
@@ -91,7 +91,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       chatCompletionsPath: llmConfig.chatCompletionsPath,
       templatePath: llmConfig.templatePath,
       propsPath: llmConfig.propsPath,
-      allowPrefixingChat: llmConfig.chatCompletionsPrefixAllowed ?? false,
+      allowPrefixingChat: llmConfig.chatCompletionsPrefixAllowed ?? 0,
       defaultChatTemplate: llmConfig.chatTemplate,
     });
 

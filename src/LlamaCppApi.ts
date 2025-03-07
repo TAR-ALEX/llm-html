@@ -14,7 +14,7 @@ export interface MyLLMApiConfig {
   completionsPath?: string;
   templatePath?: string;
   propsPath?: string;
-  allowPrefixingChat?: boolean;
+  allowPrefixingChat?: number;
   defaultChatTemplate?: any;
 }
 
@@ -78,6 +78,7 @@ export interface ChatCompletion {
 }
 
 export interface ChatCompletionCreateParams extends LLMConfigChat {
+  continue_final_message?: boolean;
   messages: ChatCompletionMessage[];
   stream: boolean;
 }
@@ -329,7 +330,7 @@ class LLMApi {
             if(!this.config.completionsPath){
               throw new Error(`Failure: To use a custom chat template, you need to have a /v1/completions endpoint specified.`);
             }
-          }else if(!this.config.allowPrefixingChat && params.messages[params.messages.length-1].role === 'assistant'){
+          }else if((this.config.allowPrefixingChat ?? 0) === 0 && params.messages[params.messages.length-1].role === 'assistant'){
             useLegacyCompletions = true;
             if(!this.config.completionsPath){
               throw new Error(`Failure: To continue/prefix an assistant message, you need to have a /v1/completions endpoint specified or have 'Chat Prefixing' enabled for /v1/chat/completions.`);
@@ -354,7 +355,7 @@ class LLMApi {
               let data = await this.props.get(); 
               return this.virtual.completionsWithTemplate.create(params, data, options);
             } 
-            throw new Error(`Failure: Could not get a chat template for /v1/completions. try setting a template path, or a chat template.`);
+            throw new Error(`Failure: Could not get a chat template for /v1/completions. try setting a Template Path or Props Path, or a Chat Template.`);
           }
         }
       }
@@ -465,8 +466,11 @@ class LLMApi {
         }
 
         if(params.messages[params.messages.length-1].role === 'assistant'){
-          if(this.config.allowPrefixingChat){
+          if(this.config.allowPrefixingChat === 1){
             params.messages[params.messages.length-1].prefix = true;
+          }
+          if(this.config.allowPrefixingChat === 2){
+            params.continue_final_message = true;
           }
         }
 

@@ -48,10 +48,16 @@ const llmConfigSchema = [
       {
         name: 'chatCompletionsPrefixAllowed',
         label: 'Chat Prefixing',
-        type: 'boolean',
+        type: 'select',
         optional: true,
-        placeholder: false,
-        description: 'Continue the assistants response by adding `"prefix": True` to the json, (works with deepseek and mistral APIs, not llama.cpp https://github.com/ggml-org/llama.cpp/issues/11536)'
+        placeholder: 1,// 0 = none, 1 = Prefix true, 2 = continue_final_message, 3 = implied by having assistant.
+        options: [
+          { value: 0, label: 'Disabled' },
+          { value: 1, label: '"prefix": True' },
+          { value: 2, label: '"continue_final_message": True' },
+          { value: 3, label: 'implied' }
+        ],
+        description: 'Method to continue the assistants response, `"prefix": True` (works with deepseek and mistral APIs, not llama.cpp https://github.com/ggml-org/llama.cpp/issues/11536)\n`"continue_final_message": True` works with vllm. `implied` works with claude.'
       },
       {
         name: 'responsePrefix',
