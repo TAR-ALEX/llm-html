@@ -394,14 +394,14 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
 
   const handleSaveDup = () => {
     let result = computeResult();
-    console.log('made dup config:', result, enabledFields);
+    console.log('made duplicate config:', result);
     if(onDuplicate) onDuplicate(result);
   }
 
   const handleSubmit = (e) => {
     e.preventDefault();
     let result = computeResult();
-    console.log('saved config:', result, enabledFields);
+    console.log('saved config:', result);
     onSubmit(result);
   };
 
