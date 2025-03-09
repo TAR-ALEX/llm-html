@@ -84,7 +84,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             return;
         }
         return <ChatBubble
-            key={index}
+            key={`${index} ${message.sender} ${message.content.substring(0,10)}`}
             index={index}
             sender={message.sender}
             content={message.content}

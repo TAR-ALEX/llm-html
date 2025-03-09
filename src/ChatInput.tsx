@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, memo } from 'react';
+import React, { useRef, useEffect, memo, useState } from 'react';
 import { Form, Button, Container } from 'react-bootstrap';
 import { isMobile } from 'react-device-detect';
 
@@ -11,14 +11,28 @@ type ChatInputProps = {
   children?: React.ReactNode;
 };
 
+function countNewlines(str) {
+  const matches = str.match(/\r?\n/g);
+  return matches ? matches.length : 0;
+}
+
 const ChatInput: React.FC<ChatInputProps> = ({ value, onChange, onSend, onStop, isLoading, children }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [newlinesCount, setNewlinesCount] = useState(0);
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.style.height = '70px';
-      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 400)}px`;
+    var resizeFunc = () => {
+      if (inputRef.current) {
+        const nlCount = countNewlines(value);
+        if(countNewlines(value) != newlinesCount){
+          inputRef.current.style.height = '70px';
+          inputRef.current.style.height = `${Math.max(Math.min(inputRef.current.scrollHeight, 400), 70)}px`;
+          setNewlinesCount(nlCount);
+        }
+        inputRef.current.style.height = `${Math.max(Math.min(inputRef.current.scrollHeight, 400), 70)}px`;
+      }
     }
+    resizeFunc();
   }, [value]);
 
   return (

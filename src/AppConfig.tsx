@@ -5,6 +5,7 @@ export type AppConfig = {
   borderAssistantMessages: boolean;
   theme: number;
   replaceSystemPromptOnConfigChange: boolean;
+  markdownForUserMessages: boolean;
 }
 
 export const defaultAppConfig: AppConfig = {
@@ -14,4 +15,5 @@ export const defaultAppConfig: AppConfig = {
   borderAssistantMessages: true,
   theme: 0,
   replaceSystemPromptOnConfigChange: true,
+  markdownForUserMessages: false,
 };

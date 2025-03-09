@@ -2,6 +2,7 @@
     /* margin-bottom: 3em !important; */
     padding: 0;
     margin: 0;
+    border-radius: 0.3em;
     /* -webkit-box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0);
     box-shadow: -10px 0px 13px -7px #000000, 10px 0px 13px -7px #000000, 35px -23px 2px -16px rgba(0, 0, 0, 0); */
     position: relative;
@@ -11,7 +12,7 @@
     color: white;
     position: absolute;
     right: 0.6em;
-    top: 0.8em;
+    top: 0.6em;
     font-size: 1.5em;
     opacity: 0.8;
     cursor: pointer;

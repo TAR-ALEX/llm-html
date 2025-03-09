@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --port 5173"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.2",

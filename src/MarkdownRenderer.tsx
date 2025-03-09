@@ -22,6 +22,7 @@ const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
   ({ segment }) => (
     <SyntaxHighlighter
       style={dracula}
+      className="m-0 px-3 pb-3 pt-3"
       language={segment.language}
       PreTag="div"
       showLineNumbers={false}
@@ -35,7 +36,7 @@ const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
 const MemoizedMarkdown = React.memo<{segment: any}>(
   ({ segment }) => (
     <Markdown
-      remarkPlugins={[remarkGfm, remarkMath]}
+      remarkPlugins={[remarkGfm]}//remarkMath
       rehypePlugins={[rehypeKatex]}
       components={{
         code({ className, children, ...props }) {
@@ -84,12 +85,18 @@ type MarkdownRendererProps = {
 
 function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
   const segments = parseMarkdown(markdown, thinkingTokens);
+  //var bgColorCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
+  var bgColorCode = "#202230";
+  var textColor = "#b7b7ba";
   return (
     <div>
       {segments.map((segment, index) => {
         if (segment.type === 'code') {
+          var titleDiv = null;
+          if(segment.title ?? "" !== "") titleDiv = <div className="m-0 pt-2 ps-3 fs-5 py-2 fw-bold">{segment.title}</div>;
           return (
-            <pre className="blog-pre" key={`code-${index}`}>
+            <pre className="blog-pre mt-0 mb-2" key={`code-${index}`} style={{color: textColor, background: bgColorCode}}>
+              {titleDiv}
               <CodeCopyBtn code={segment.content} />
               {mode === 'codemirror' ? (
                 <Alert className="p-0" variant="dark">
@@ -148,18 +155,20 @@ function parseMarkdown(
     type: 'text' | 'code' | 'thinking';
     content: string;
     language?: string;
+    title?: string;
   }> = [];
 
   let currentType: 'text' | 'code' | 'thinking' = 'text';
   let currentContent: string[] = [];
   let currentLanguage = '';
+  let currentTitle = '';
 
   const flush = () => {
     if (currentContent.length > 0) {
       segments.push({
         type: currentType,
         content: currentContent.join('\n'),
-        ...(currentType === 'code' ? { language: currentLanguage } : {}),
+        ...(currentType === 'code' ? { language: currentLanguage, title: currentTitle } : {}),
       });
       currentContent = [];
     }
@@ -176,7 +185,16 @@ function parseMarkdown(
       } else if (/^\s*```/.test(line)) {
         flush();
         currentType = 'code';
-        currentLanguage = line.trim().slice(3).trim() || 'text';
+        var infoStr = line.trim().slice(3).trim();
+        var firstSpaceIndex = infoStr.indexOf(' ');
+        if(firstSpaceIndex <= 0){
+          firstSpaceIndex = infoStr.trim().length;
+        }
+        currentLanguage = infoStr.substring(0,firstSpaceIndex) ?? 'text';
+        currentTitle = infoStr.substring(firstSpaceIndex).trim() ?? "";
+        currentTitle = currentTitle.replace(/^title=/, '');
+        currentTitle = currentTitle.replace(/^file=/, '');
+        currentTitle = currentTitle.replace(/^filename=/, '');
       } else {
         currentContent.push(line);
       }
@@ -185,6 +203,7 @@ function parseMarkdown(
         flush();
         currentType = 'text';
         currentLanguage = '';
+        currentTitle = '';
       } else {
         currentContent.push(line);
       }

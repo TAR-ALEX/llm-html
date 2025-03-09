@@ -143,7 +143,7 @@ const llmConfigSchema = [
         type: 'slider',
         step: 0.1,
         min: 0,
-        max: 1,
+        max: 3,
         placeholder: 0.8,
         description: 'Adjust the randomness of the generated text'
       },
@@ -152,9 +152,9 @@ const llmConfigSchema = [
         label: 'Top K',
         type: 'number',
         optional: true,
-        min: 1,
+        min: 0,
         placeholder: 40,
-        description: 'Limit the next token selection to the K most probable tokens'
+        description: 'Limit the next token selection to the K most probable tokens (0 is disabled)'
       },
       {
         name: 'top_p',

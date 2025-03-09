@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
-import { ListGroup, Form, Button, ButtonGroup, Spinner } from 'react-bootstrap';
+import { ListGroup, Form, Button, Spinner } from 'react-bootstrap';
 import MarkdownRenderer from './MarkdownRenderer';
 import { getThinkingStartAndEnd, LLMConfig } from './LLMConfig';
 import { AppConfig } from './AppConfig';
@@ -192,8 +192,15 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
           </>
         ) : (
           <>
-            <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} isLast={isLast}>{content}</MarkdownRenderer>
-            <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
+            {(appConfig.markdownForUserMessages ?? false) || sender === 'assistant' ? (
+              <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} isLast={isLast}>{content}</MarkdownRenderer>
+            ):(
+              <div style={{ whiteSpace: 'pre-wrap' }}>
+                {content}
+              </div>
+            )
+            }
+             <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
                 className='px-3'
                 variant="outline-primary"

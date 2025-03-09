@@ -58,6 +58,13 @@ const AppConfigSchema = [
         description: 'Assistant Messages have a secondary color border',
       },
       {
+        name: 'markdownForUserMessages',
+        label: 'Use Markdown for User Messages',
+        type: 'boolean',
+        placeholder: true,
+        description: 'User messages will be rendered as markdown text',
+      },
+      {
         name: 'theme',
         label: 'Theme',
         type: 'select',
