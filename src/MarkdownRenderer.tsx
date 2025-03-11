@@ -21,8 +21,10 @@ import { AppConfig } from './AppConfig';
 const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
   ({ segment }) => (
     <SyntaxHighlighter
-      style={dracula}
-      className="m-0 px-3 pb-3 pt-3"
+      style={{
+        ...dracula, 
+      }}
+      className="m-0 px-3 pb-3 pt-3 rounded-0"
       language={segment.language}
       PreTag="div"
       showLineNumbers={false}
@@ -85,7 +87,7 @@ type MarkdownRendererProps = {
 
 function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
   const segments = parseMarkdown(markdown, thinkingTokens);
-  //var bgColorCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
+  // var bgColorCodeCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
   var bgColorCode = "#202230";
   var textColor = "#b7b7ba";
   return (
@@ -93,11 +95,25 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, rende
       {segments.map((segment, index) => {
         if (segment.type === 'code') {
           var titleDiv = null;
-          if(segment.title ?? "" !== "") titleDiv = <div className="m-0 pt-2 ps-3 fs-5 py-2 fw-bold">{segment.title}</div>;
+          // segment.title = "Test";
+          if(segment.title ?? "" !== "") titleDiv = <div className="p-0 pe-2 fw-bold">{segment.title}</div>;
           return (
-            <pre className="blog-pre mt-0 mb-2" key={`code-${index}`} style={{color: textColor, background: bgColorCode}}>
-              {titleDiv}
-              <CodeCopyBtn code={segment.content} />
+            <div className="blog-pre mt-0 mb-2" key={`code-${index}`}>{/*style={{color: textColor, background: bgColorCodeCode}}*/}
+              {
+                (titleDiv) ? (
+                  <div className="d-flex px-2 align-items-center justify-content-between code-header-style" style={{color: textColor, background: bgColorCode, paddingTop:"0.2em", paddingBottom:"0.2em",}}>
+                    {titleDiv}                
+                    <CodeCopyBtn code={segment.content} />
+                  </div>
+                ) : (
+                  <div style={{height: "100%",  position: "absolute", right: "0px", top: "0px"}}>
+                    <div className="px-2" style={{position: "sticky", paddingTop:"0.2em", paddingBottom:"0.2em", top: "0px", right: "0px", display: "inline-block"}}>
+                    <CodeCopyBtn code={segment.content} />
+                    </div>
+                  </div>
+                )
+              }
+              
               {mode === 'codemirror' ? (
                 <Alert className="p-0" variant="dark">
                   <CodeMirror
@@ -122,7 +138,7 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, rende
                   </code>
                 </Alert>
               ) : (<></>)}
-            </pre>
+            </div>
           );
         } else if (segment.type === 'thinking') {
           return (
