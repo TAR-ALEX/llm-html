@@ -11,9 +11,10 @@ type ChatInputProps = {
   children?: React.ReactNode;
 };
 
-function countNewlines(str) {
+function countNewlines(str: string) {
   const matches = str.match(/\r?\n/g);
-  return matches ? matches.length : 0;
+  if(str.length == 0) return 0;
+  return (matches?.length ?? 0) + 1;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({ value, onChange, onSend, onStop, isLoading, children }) => {

@@ -34,7 +34,7 @@ const CollapsibleAlert: React.FC<CollapsibleAlertProps> = ({ variant, title, chi
   };
 
   return (
-    <Alert className="bg-transparent mx-0 mt-0" variant={variant} style={{ padding: 0 }}>
+    <Alert className="mx-0 mt-0" variant={variant} style={{ padding: 0 }}>
       {/* Clickable header */}
       <div
         onClick={handleToggle}

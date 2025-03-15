@@ -497,6 +497,12 @@ class LLMApi {
           const generate = async function* (this: LLMApi): AsyncIterable<ChatCompletionChunk> {
             let buffer = '';
             let isReasoning = false;
+            if(params.messages[params.messages.length-1].role === 'assistant'){
+              const cont = params.messages[params.messages.length-1].content;
+              if(cont.includes(this.config.thinkingTokens.start) && !cont.includes(this.config.thinkingTokens.end)){
+                isReasoning = true;
+              }
+            }
 
             try {
               while (true) {

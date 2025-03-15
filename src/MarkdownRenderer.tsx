@@ -87,8 +87,8 @@ type MarkdownRendererProps = {
 
 function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
   const segments = parseMarkdown(markdown, thinkingTokens);
-  // var bgColorCodeCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
-  var bgColorCode = "#202230";
+  var bgColorCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
+  var bgColorHat = "#202230";
   var textColor = "#b7b7ba";
   return (
     <div>
@@ -98,16 +98,16 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, rende
           // segment.title = "Test";
           if(segment.title ?? "" !== "") titleDiv = <div className="p-0 pe-2 fw-bold">{segment.title}</div>;
           return (
-            <div className="blog-pre mt-0 mb-2" key={`code-${index}`}>{/*style={{color: textColor, background: bgColorCodeCode}}*/}
+            <div className="blog-pre mt-0 mb-2" key={`code-${index}`}>{/*style={{color: textColor, background: bgColorHat}}*/}
               {
                 (titleDiv) ? (
-                  <div className="d-flex px-2 align-items-center justify-content-between code-header-style" style={{color: textColor, background: bgColorCode, paddingTop:"0.2em", paddingBottom:"0.2em",}}>
+                  <div className="d-flex px-2 align-items-center justify-content-between code-header-style" style={{color: textColor, background: bgColorHat, paddingTop:"0.2em", paddingBottom:"0.2em",}}>
                     {titleDiv}                
                     <CodeCopyBtn code={segment.content} />
                   </div>
                 ) : (
                   <div style={{height: "100%",  position: "absolute", right: "0px", top: "0px"}}>
-                    <div className="px-2" style={{position: "sticky", paddingTop:"0.2em", paddingBottom:"0.2em", top: "0px", right: "0px", display: "inline-block"}}>
+                    <div className="px-2" style={{position: "sticky", paddingTop:"0.2em", paddingBottom:"0.2em", top: "0px", right: "0px", display: "inline-block"}}>{/*, background: bgColorCode, boxShadow: `${bgColorCode} 0px 0px 5px 5px`*/}
                     <CodeCopyBtn code={segment.content} />
                     </div>
                   </div>
