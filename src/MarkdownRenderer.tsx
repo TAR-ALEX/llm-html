@@ -81,13 +81,14 @@ type MarkdownRendererProps = {
   }
   children: string;
   renderCodeEngine?: 'codemirror' | 'syntaxhighlighter' | 'none';
+  sender?: string;
   appConfig?: AppConfig;
   isLast?: boolean;
 };
 
-function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
+function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, sender: sender, renderCodeEngine: mode = 'syntaxhighlighter', isLast}: MarkdownRendererProps) {
   const segments = parseMarkdown(markdown, thinkingTokens);
-  var bgColorCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
+  // var bgColorCode = dracula["pre[class*=\"language-\"]"].background ?? "none";
   var bgColorHat = "#202230";
   var textColor = "#b7b7ba";
   return (
@@ -149,9 +150,16 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, rende
             </CollapsibleAlert>
           );
         } else {
-          return (
-            <MemoizedMarkdown key={`text-${index}`} segment={segment}/>
-          );
+          if((appConfig.markdownForUserMessages ?? false) || sender === 'assistant'){
+            return (
+              <MemoizedMarkdown key={`text-${index}`} segment={segment}/>
+            );
+          }else{
+          return( <div key={`text-${index}`} style={{ whiteSpace: 'pre-wrap' }}>
+            {segment.content}
+          </div>);
+          }
+          
         }
       })}
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Container } from 'react-bootstrap';
 import ChatThread from './ChatThread';
 import ChatInput from './ChatInput';
+import { v4 as uuidv4 } from 'uuid';
 import { Message } from './ChatBubble';
 import LLMApi, { ChatCompletion, ChatCompletionChunk } from './LlamaCppApi';
 import { getThinkingStartAndEnd, LLMConfig, maskToLLMConfigChat, removeThinkingTokens } from './LLMConfig';
@@ -13,15 +14,15 @@ export type LLMChatProps = {
   initialMessages?: Message[];
   onError?: (header: string, content: string) => void;
   inputValue?: string;
-  onInputValueChange?: (value: string) => void;
   appConfig?: AppConfig;
+  uuid?: string;
 };
 
 function newAssistantStarter(content?: string) {
   return { sender: 'assistant', content: content ?? "" };
 }
 
-const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError, inputValue, onInputValueChange, appConfig }) => {
+const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError, inputValue, appConfig, uuid }) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages || []);
   const [wholeMessages, setWholeMessages] = useState<Message[]>(messages);
   const [newMessage, setNewMessage] = useState(inputValue ?? '');
@@ -30,6 +31,20 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [configId, setConfigId] = useState(llmConfig.id);
+  const [messageUUID, setMessageUUID] = useState(uuidv4());
+  const messageUUIDRef = useRef(uuid);
+
+  // Update the ref whenever messageUUID changes
+  useEffect(() => {
+    messageUUIDRef.current = messageUUID;
+  }, [messageUUID]);
+
+  useEffect(() => {
+    // handleStopGeneration();
+    setMessages(initialMessages);
+    setWholeMessages(initialMessages);
+    setMessageUUID(uuid);
+  }, [uuid]);
 
   useEffect(() => {
     if (appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) {
@@ -46,11 +61,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         return newMsg;
       });
     }
-  }, [llmConfig, appConfig]);
-
-  useEffect(() => {
-    if (onInputValueChange) onInputValueChange(newMessage);
-  }, [newMessage]);
+  }, [llmConfig, appConfig, initialMessages]);
 
   useEffect(() => {
     onMessagesChange?.(wholeMessages);
@@ -109,9 +120,14 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
 
       let buffer = '';
       let animationFrameId: number | null = null;
+      const uuidChat = messageUUID;
 
       const flushBuffer = () => {
         if (buffer.length === 0) return;
+        if(uuidChat !== messageUUIDRef.current){
+          controller.abort();
+          return;
+        }
 
         const contentToAdd = buffer;
         buffer = '';
@@ -161,7 +177,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       setIsLoading(false);
       setAbortController(null);
     }
-  }, [wholeMessages, llmConfig]);
+  }, [wholeMessages, llmConfig, messageUUID]);
 
   const handleStopGeneration = useCallback(() => {
     abortController?.abort();
@@ -203,7 +219,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     [wholeMessages, fetchAssistantResponse]
   );
 
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = useCallback(async (newMessage: string) => {
     const newMessageContent = newMessage.trim();
     if (!newMessageContent || isLoading) return;
 
@@ -219,6 +235,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   return (
     <Container fluid className="d-flex flex-column gap-2 h-100 overflow-hidden p-0">
       <ChatThread
+        key={messageUUID}
         messages={messages}
         onEdit={handleEditMessage}
         onRefresh={handleRefreshMessage}
@@ -231,7 +248,6 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       />
       <ChatInput
         value={newMessage}
-        onChange={setNewMessage}
         onSend={handleSendMessage}
         onStop={handleStopGeneration}
         isLoading={isLoading}

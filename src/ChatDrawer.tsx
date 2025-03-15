@@ -322,14 +322,13 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
             <div className="flex-grow-1 position-relative bg-body-tertiary" style={{ minHeight: 0 }}>
                 {selectedChat && selectedConfig ? (
                     <LLMChat
-                        key={`${selectedChatId}`}
+                        uuid={selectedChat.id}
                         appConfig={appConfig}
                         llmConfig={selectedConfig}
                         initialMessages={selectedChat.messages}
                         onMessagesChange={handleMessagesChange}
                         onError={onError}
                         inputValue={inputValue}
-                        onInputValueChange={setInputValue}
                     />
                 ) : selectedConfig ? (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">
