@@ -164,8 +164,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
       className="d-flex gap-2" 
       style={{ marginBottom: '10px' }}
     >
-      <Stack>
-      <Stack direction="horizontal"gap={1}>
+      <Stack className= "pt-0 mt-0">
+      <Stack className= "pt-0 mt-0" direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
       {files.map((file) => (
         <h5>
         <Badge key={file.name} bg="secondary" className="mb-1">

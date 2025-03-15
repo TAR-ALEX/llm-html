@@ -117,7 +117,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                 height: '100%',
                 overflowY: 'auto',
                 marginTop: '10px',
-                marginBottom: '10px',
+                marginBottom: '0px',
                 display: 'flex',
                 flexDirection: flexDirection,
                 overflowAnchor: overflowAnchor,
