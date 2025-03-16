@@ -497,10 +497,11 @@ class LLMApi {
           const generate = async function* (this: LLMApi): AsyncIterable<ChatCompletionChunk> {
             let buffer = '';
             let isReasoning = false;
+            let hasUntrackedReasoningBlock = false;
             if(params.messages[params.messages.length-1].role === 'assistant'){
               const cont = params.messages[params.messages.length-1].content;
               if(cont.includes(this.config.thinkingTokens.start) && !cont.includes(this.config.thinkingTokens.end)){
-                isReasoning = true;
+                hasUntrackedReasoningBlock = true;
               }
             }
 
@@ -527,7 +528,12 @@ class LLMApi {
                           data.choices[0].delta.reasoning = data.choices[0].delta.reasoning_content;
                         if (data.choices[0].delta.reasoning) {
                           if (!isReasoning) {
-                            data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + this.config.thinkingTokens.start;
+                            if(hasUntrackedReasoningBlock){
+                              isReasoning = true;
+                              hasUntrackedReasoningBlock = false;
+                            }else{
+                              data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + this.config.thinkingTokens.start;
+                            }
                           }
                           isReasoning = true;
                           data.choices[0].delta.content = (data.choices[0].delta.content ?? "") + data.choices[0].delta.reasoning;

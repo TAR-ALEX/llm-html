@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, memo, useState, useCallback } from 'react';
-import { Form, Button, Container, Row, Col, Stack, Badge, CloseButton } from 'react-bootstrap';
+import { Form, Button, Container, Stack, Badge, CloseButton } from 'react-bootstrap';
 import { isMobile } from 'react-device-detect';
 
 const extensionMapping: { [key: string]: string } = {
