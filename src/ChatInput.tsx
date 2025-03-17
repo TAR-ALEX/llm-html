@@ -70,10 +70,10 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
     let result = '';
     files.forEach((file) => {
       let lang = getProgrammingLanguage(file.name);
-      result += `\`\`\`${lang} filename=${file.name}\n${file.content}\n\`\`\`\n`;
+      // result += `\`\`\`${lang} filename=${file.name}\n${file.content}\n\`\`\`\n`;
+      result += `### ${file.name}\n\`\`\`${lang}\n${file.content}\n\`\`\`\n`;
     });
     result += val;
-    console.log(result);
     onSend(result);
     setCurrentValue('');
     setFiles([]);
@@ -138,24 +138,6 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
     }
 };
 
-  // const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-  //   e.preventDefault();
-  //   const items = e.clipboardData.items;
-  //   for (let i = 0; i < items.length; i++) {
-  //     if (items[i].type.indexOf('text') === -1) continue;
-  //     const file = items[i].getAsFile();
-  //     if (file) {
-  //       const reader = new FileReader();
-  //       reader.onload = (event) => {
-  //         if (event.target && event.target.result) {
-  //           setFiles((f) => [...f, { name: file.name, content: (event.target.result as string) }]);
-  //         }
-  //       };
-  //       reader.readAsText(file);
-  //     }
-  //   }
-  // };
-
   return (
     <Container 
       onDragOver={handleDragOver}
@@ -167,8 +149,8 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
       <Stack className= "pt-0 mt-0">
       <Stack className= "pt-0 mt-0" direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
       {files.map((file) => (
-        <h5>
-        <Badge key={file.name} bg="secondary" className="mb-1">
+        <h5 key={file.name}>
+        <Badge bg="secondary" className="mb-1">
         <Stack direction="horizontal">
           {file.name}
           <CloseButton

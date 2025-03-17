@@ -168,6 +168,10 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, sende
 
 export default memo(MarkdownRenderer);
 
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function parseMarkdown(
   markdown: string,
   thinkingTokens?: {
@@ -176,82 +180,110 @@ function parseMarkdown(
   }
 ) {
   const segments: Array<{
-    type: 'text' | 'code' | 'thinking';
+    type: string;
     content: string;
     language?: string;
     title?: string;
   }> = [];
 
-  let currentType: 'text' | 'code' | 'thinking' = 'text';
-  let currentContent: string[] = [];
-  let currentLanguage = '';
-  let currentTitle = '';
+  // Build our generic block definitions.
+  const regexBlockTypes: Array<{
+    blockType: string;
+    regexStart:  Array<RegExp>;
+    regexEnd:  Array<RegExp>;
+  }> = [];
 
-  const flush = () => {
-    if (currentContent.length > 0) {
+  // If thinking tokens are provided, add a thinking block.
+  if (thinkingTokens) {
+    regexBlockTypes.push({
+      blockType: 'thinking',
+      regexStart: [new RegExp(escapeRegExp(thinkingTokens.thinkingStart), 'gm')],
+      regexEnd: [new RegExp(escapeRegExp(thinkingTokens.thinkingEnd), 'gm')],
+    });
+  }
+
+  // Always include a code block type.
+  // Using named capture groups to extract "language" and "filename" if provided.
+  regexBlockTypes.push({
+    blockType: 'code',
+    regexStart: [
+      /(?:\#\#\#\s(?<filename>[\S]+)\n)?```\s*?(?<language>\w+)?\n/gm, 
+      /```\s*?(?<language>\w+)?(?:\s+filename=(?<filename>[\S]+))?\n/gm
+    ],
+    regexEnd: [/\n```/gm],
+  });
+
+  let pos = 0;
+  while (pos < markdown.length) {
+    let earliestIndex: number | null = null;
+    let selectedBlock: typeof regexBlockTypes[0] | null = null;
+    let startMatch: RegExpExecArray | null = null;
+
+    // Find the next block start among our block types.
+    for (const block of regexBlockTypes) {
+      block.regexStart[0].lastIndex = pos;
+      const match = block.regexStart[0].exec(markdown);
+      if (match && (earliestIndex === null || match.index < earliestIndex)) {
+        earliestIndex = match.index;
+        selectedBlock = block;
+        startMatch = match;
+      }
+    }
+
+    // If no block was found, push the remaining text and exit.
+    if (earliestIndex === null || selectedBlock === null) {
+      if (pos < markdown.length) {
+        segments.push({
+          type: 'text',
+          content: markdown.slice(pos),
+        });
+      }
+      break;
+    }
+
+    // Push any text before the block as a plain text segment.
+    if (earliestIndex > pos) {
       segments.push({
-        type: currentType,
-        content: currentContent.join('\n'),
-        ...(currentType === 'code' ? { language: currentLanguage, title: currentTitle } : {}),
+        type: 'text',
+        content: markdown.slice(pos, earliestIndex),
       });
-      currentContent = [];
     }
-  };
 
-  const processLine = (line: string) => {
-    if (currentType === 'text') {
-      if (thinkingTokens && line.includes(thinkingTokens.thinkingStart)) {
-        const [before, after] = splitAtMarker(line, thinkingTokens.thinkingStart);
-        if (before) currentContent.push(before);
-        flush();
-        currentType = 'thinking';
-        processLine(after);
-      } else if (/^\s*```/.test(line)) {
-        flush();
-        currentType = 'code';
-        var infoStr = line.trim().slice(3).trim();
-        var firstSpaceIndex = infoStr.indexOf(' ');
-        if(firstSpaceIndex <= 0){
-          firstSpaceIndex = infoStr.trim().length;
-        }
-        currentLanguage = infoStr.substring(0,firstSpaceIndex) ?? 'text';
-        currentTitle = infoStr.substring(firstSpaceIndex).trim() ?? "";
-        currentTitle = currentTitle.replace(/^title=/, '');
-        currentTitle = currentTitle.replace(/^file=/, '');
-        currentTitle = currentTitle.replace(/^filename=/, '');
-      } else {
-        currentContent.push(line);
-      }
-    } else if (currentType === 'code') {
-      if (/^\s*```/.test(line)) {
-        flush();
-        currentType = 'text';
-        currentLanguage = '';
-        currentTitle = '';
-      } else {
-        currentContent.push(line);
-      }
-    } else if (currentType === 'thinking') {
-      if (thinkingTokens && line.includes(thinkingTokens.thinkingEnd)) {
-        const [before, after] = splitAtMarker(line, thinkingTokens.thinkingEnd);
-        currentContent.push(before);
-        flush();
-        currentType = 'text';
-        processLine(after);
-      } else {
-        currentContent.push(line);
-      }
+    // Determine the end of this block.
+    const startTokenEnd = selectedBlock.regexStart[0].lastIndex;
+    selectedBlock.regexEnd[0].lastIndex = startTokenEnd;
+    const endMatch = selectedBlock.regexEnd[0].exec(markdown);
+    let blockContent: string;
+    let endIndex: number;
+
+    if (endMatch) {
+      // Block is closed properly.
+      blockContent = markdown.slice(startTokenEnd, endMatch.index);
+      endIndex = selectedBlock.regexEnd[0].lastIndex;
+    } else {
+      // Block is not closed; capture until the end.
+      blockContent = markdown.slice(startTokenEnd);
+      endIndex = markdown.length;
     }
-  };
 
-  const splitAtMarker = (line: string, marker: string): [string, string] => {
-    const index = line.indexOf(marker);
-    if (index === -1) return [line, ''];
-    return [line.slice(0, index), line.slice(index + marker.length)];
-  };
+    // Build the segment.
+    if (selectedBlock.blockType === 'code') {
+      const groups = startMatch.groups || {};
+      segments.push({
+        type: selectedBlock.blockType,
+        content: blockContent,
+        language: groups.language ? groups.language.trim() : undefined,
+        title: groups.filename ? groups.filename.trim() : undefined,
+      });
+    } else {
+      segments.push({
+        type: selectedBlock.blockType,
+        content: blockContent,
+      });
+    }
 
-  markdown.split('\n').forEach(processLine);
-  flush();
+    pos = endIndex;
+  }
 
   return segments;
 }
