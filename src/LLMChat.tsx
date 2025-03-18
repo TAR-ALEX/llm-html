@@ -40,7 +40,6 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   }, [messageUUID]);
 
   useEffect(() => {
-    // handleStopGeneration();
     setMessages(initialMessages);
     setWholeMessages(initialMessages);
     setMessageUUID(uuid);
@@ -187,9 +186,21 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     setMessages((prev) => {
       const newMessages = [...prev];
       newMessages[index].content = newContent;
+      setWholeMessages(newMessages);
       return newMessages;
     });
-  }, [wholeMessages]);
+  }, []);
+
+  const handleDeleteMessage = useCallback(
+    async (index: number) => {
+      setMessages(prev => {
+        let val = prev.slice(0, index);
+        setWholeMessages(val);
+        return val;
+      });
+    },
+    []
+  );
 
   const handleRefreshMessage = useCallback(
     async (index: number) => {
@@ -240,6 +251,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         onEdit={handleEditMessage}
         onRefresh={handleRefreshMessage}
         onContinue={handleContinueMessage}
+        onDelete={handleDeleteMessage}
         isLoading={isLoading}
         editingIndex={editingIndex}
         setEditingIndex={setEditingIndex}

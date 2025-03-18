@@ -210,7 +210,7 @@ function parseMarkdown(
       /(?:\#\#\#\s(?<filename>[\S]+)\n)?```\s*?(?<language>\w+)?\n/gm, 
       /```\s*?(?<language>\w+)?(?:\s+filename=(?<filename>[\S]+))?\n/gm
     ],
-    regexEnd: [/\n```/gm],
+    regexEnd: [/\n\s*```/gm],
   });
 
   let pos = 0;

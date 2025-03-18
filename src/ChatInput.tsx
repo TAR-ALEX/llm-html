@@ -181,7 +181,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
         <Stack direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
           {files.map((file) => (
             <h5 key={file.id}>
-              <Badge bg="secondary" className="mb-1">
+              <Badge bg="secondary-subtle" className="text-secondary-emphasis mb-1">
                 <Stack direction="horizontal">
                   {file.name}
                   <CloseButton

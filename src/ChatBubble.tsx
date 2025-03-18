@@ -22,9 +22,10 @@ interface ChatBubbleInterface {
   setEditingIndex: React.Dispatch<React.SetStateAction<number | null>>;
   llmConfig?: LLMConfig;
   appConfig?: AppConfig;
+  onDeleteMessage?: any;
 }
 
-const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig, appConfig }) => {
+const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig, appConfig, onDeleteMessage }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [editedContent, setEditedContent] = useState(content);
@@ -89,6 +90,14 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
     });
   }, [index, setEditingIndex]);
 
+  const handleDeleteClicked = useCallback(() => {
+    if(onDeleteMessage) {onDeleteMessage(index);}
+  }, [index]);
+
+  const handleClearBelowClicked = useCallback(() => {
+    if(onDeleteMessage) {onDeleteMessage(index+1);}
+  }, [index]);
+
   const handleCancel = useCallback(() => {
     setEditingIndex(null);
     setEditedContent(content);
@@ -107,7 +116,9 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
 
   const handleSaveAndContinue = useCallback(() => {
     handleSave();
-    onContinue(index);
+    requestAnimationFrame(() => {
+      onContinue(index);
+    });
   }, [handleSave, index, onContinue]);
 
   const classMap = {
@@ -115,6 +126,10 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
     user: 'text-primary-emphasis bg-primary-subtle border border-primary-subtle',
     assistant: appConfig?.borderAssistantMessages === false ?  '': 'text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle'
   };
+
+  let buttonGroupStyle = 'outline-secondary';
+  if(sender === 'system') buttonGroupStyle = "outline-warning";
+  else if(sender === 'user') buttonGroupStyle = "outline-primary";
 
   return (
     <div
@@ -147,7 +162,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
             {/* <ButtonGroup className="d-flex justify-content-end gap-2"> */}
             <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
-                className='px-3'
+                className='px-2'
                 variant="secondary"
                 size="sm"
                 onClick={handleCancel}
@@ -156,7 +171,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 Cancel
               </Button>
               <Button
-                className='px-3'
+                className='px-2'
                 variant="primary"
                 size="sm"
                 onClick={handleSave}
@@ -166,7 +181,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
               </Button>
               {sender === 'assistant' ? (
                 <Button
-                  className='px-3'
+                  className='px-2'
                   variant="success"
                   size="sm"
                   onClick={handleSaveAndContinue}
@@ -176,12 +191,14 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 </Button>
               ) : (
                 <Button
-                  className='px-3'
+                  className='px-2'
                   variant="success"
                   size="sm"
                   onClick={() => {
                     handleSave();
-                    onRefresh(index);
+                    requestAnimationFrame(() => {
+                      onRefresh(index);
+                    });
                   }}
                   disabled={isLoading}
                 >
@@ -195,8 +212,8 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
              <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} sender={sender} isLast={isLast}>{content}</MarkdownRenderer>
              <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
               <Button
-                className='px-3'
-                variant="outline-primary"
+                className='px-2'
+                variant={buttonGroupStyle}
                 size="sm"
                 onClick={handleEditClick}
                 disabled={isDisabled}
@@ -204,8 +221,28 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 Edit
               </Button>
               <Button
-                className='px-3'
-                variant="outline-secondary"
+                className='px-2'
+                variant={buttonGroupStyle}
+                size="sm"
+                onClick={handleDeleteClicked}
+                disabled={isDisabled}
+              >
+                Delete
+              </Button>
+              {
+              (sender === "system")?<Button
+                className='px-2'
+                variant={buttonGroupStyle}
+                size="sm"
+                onClick={handleClearBelowClicked}
+                disabled={isDisabled}
+              >
+                Reset
+              </Button>:<></>
+              }
+              <Button
+                className='px-2'
+                variant={buttonGroupStyle}
                 size="sm"
                 onClick={() => onRefresh(index)}
                 disabled={isDisabled}

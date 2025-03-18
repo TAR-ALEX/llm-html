@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, ListGroup, Form, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPencil, faSave} from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPencil, faSave } from '@fortawesome/free-solid-svg-icons';
 import { Chat } from './storage';
 import { isMobile } from 'react-device-detect';
 
@@ -12,7 +12,8 @@ const ChatListItem: React.FC<{
     onRename: (newName: string) => void;
     onDelete: () => void;
 }> = ({ chat, isSelected, onSelect, onRename, onDelete }) => {
-    const inputRef = useRef(null);
+    const containerRef = useRef(null);
+    const inputRef = useRef<HTMLInputElement>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedName, setEditedName] = useState(chat.name);
     const saveButtonRef = useRef<HTMLButtonElement>(null);
@@ -23,6 +24,15 @@ const ChatListItem: React.FC<{
             inputRef.current.select();
         }
     }, [isEditing]);
+
+    useEffect(() => {
+        if (isSelected) {
+            const element = inputRef.current || saveButtonRef.current;
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, [isSelected]);
 
     const handleRename = () => {
         if (editedName.trim()) {
@@ -39,10 +49,11 @@ const ChatListItem: React.FC<{
     };
 
     let btnP = "p-2";
-    if(isMobile) btnP = "py-2 px-3";
+    if (isMobile) btnP = "py-2 px-3";
 
     return (
         <ListGroup.Item
+            ref={containerRef}
             as="div"
             onClick={onSelect}
             role="button"
@@ -114,4 +125,4 @@ const ChatListItem: React.FC<{
     );
 };
 
-export default ChatListItem
+export default ChatListItem;

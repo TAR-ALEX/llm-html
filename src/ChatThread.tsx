@@ -36,6 +36,7 @@ export type ChatThreadProps = {
     setEditingIndex: React.Dispatch<React.SetStateAction<number | null>>;
     llmConfig?: LLMConfig;
     appConfig?: AppConfig;
+    onDelete?: (index: number) => void;
 };
 
 const ChatThread: React.FC<ChatThreadProps> = ({
@@ -48,6 +49,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     setEditingIndex,
     llmConfig,
     appConfig,
+    onDelete,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const spacerRef = useRef<HTMLDivElement>(null);
@@ -91,6 +93,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             onEdit={onEdit}
             onRefresh={onRefresh}
             onContinue={onContinue}
+            onDeleteMessage={onDelete}
             isLoading={isLoading}
             isLast={index >= messages.length - 1}
             editingIndex={editingIndex}

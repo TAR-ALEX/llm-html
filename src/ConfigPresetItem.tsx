@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button, ButtonGroup, ListGroup } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -12,10 +12,21 @@ const ConfigPresetItem: React.FC<{
     onEdit: (config: LLMConfig) => void;
     onDelete: () => void;
 }> = ({ config, isSelected, onSelect, onEdit, onDelete }) => {
+    const containerRef = useRef(null);
+    useEffect(() => {
+        if (isSelected) {
+            const element = containerRef.current;
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }, [isSelected]);
+    
     let btnP = "p-2";
     if(isMobile) btnP = "py-2 px-3";
     return (
         <ListGroup.Item
+            ref={containerRef}
             as="div"
             onClick={onSelect}
             role="button"
