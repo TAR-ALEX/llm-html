@@ -17,6 +17,11 @@ import { Alert } from 'react-bootstrap';
 import CollapsibleAlert from './CollapsibleAlert';
 import { AppConfig } from './AppConfig';
 
+// Configure remarkMath to disable single dollar text math
+const remarkMathConfig = {
+  singleDollarTextMath: false
+};
+
 // Create the memoized component
 const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
   ({ segment }) => (
@@ -38,7 +43,7 @@ const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
 const MemoizedMarkdown = React.memo<{segment: any}>(
   ({ segment }) => (
     <Markdown
-      remarkPlugins={[remarkGfm]}//remarkMath
+      remarkPlugins={[remarkGfm, [remarkMath, remarkMathConfig]]}
       rehypePlugins={[rehypeKatex]}
       components={{
         code({ className, children, ...props }) {

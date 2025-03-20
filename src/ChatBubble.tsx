@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback, memo } from 'react';
+import React, { useRef, useState, useEffect, useCallback, memo, useMemo } from 'react';
 import { ListGroup, Form, Button, Spinner } from 'react-bootstrap';
 import MarkdownRenderer from './MarkdownRenderer';
 import { getThinkingStartAndEnd, LLMConfig } from './LLMConfig';
@@ -33,11 +33,12 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
   const isEditing = editingIndex === index;
   const [oldEditHeight, setOldEditHeight] = useState(25);
 
-  let thinkingTokens: { thinkingStart: string, thinkingEnd: string } | null = null;
-
-  if (sender == "assistant" && llmConfig && llmConfig.thinking_escapes) {
-    thinkingTokens = getThinkingStartAndEnd(llmConfig);
-  }
+  // Memoize thinkingTokens to prevent unnecessary reference changes
+  const thinkingTokens = useMemo(() => {
+    return sender === "assistant" && llmConfig?.thinking_escapes
+      ? getThinkingStartAndEnd(llmConfig)
+      : null;
+  }, [llmConfig, sender]); // Only recreate when these dependencies change
 
   useEffect(() => {
     setOldEditHeight(0);
