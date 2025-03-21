@@ -1,50 +1,58 @@
-# React + TypeScript + Vite
+# LLM-HTML
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+LLM-HTML is a web-based application designed to interact with Large Language Models (LLMs). The whole app is contained within a single HTML file. It supports llama.cpp as the server endpoint and other openai compatible APIs. It provides a user-friendly interface for creating and managing chats, configuring multiple LLM settings, and attaching code files via drag-and-drop. The application is built using React, TypeScript, and Bootstrap, and it is optimized for both desktop and mobile devices.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Chat Management**: Create, edit, and delete chats.
+- **Configuration Presets**: Manage and configure LLM settings. Use different APIs.
+- **File Attachment**: Attach code files via drag-and-drop.
+- **Responsive Design**: Optimized for both desktop and mobile devices.
+- **Markdown Rendering**: Supports markdown rendering for chat messages.
+- **Real-time Updates**: Real-time updates for chat messages and configurations.
 
-## Expanding the ESLint configuration
+## Usage
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+Download the latest HTML file release from this url by saving the page ([https://tar-alex.github.io/llm-html/](https://tar-alex.github.io/llm-html/))
 
-- Configure the top-level `parserOptions` property like this:
+## Building
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+1. Install the dependencies
+
+```bash
+npm install
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## Running the Dev Application
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
+1. Start the development server:
 
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+npm run dev
 ```
+
+2. Open your browser and navigate to `http://localhost:5173`.
+
+## Building the Release
+
+To build the release as a single HTML file, run:
+
+```bash
+npm run build
+```
+
+The build HTML file will be stored in the `dist` directory.
+
+you can optionally serve it after building with:
+
+```bash
+npm run preview
+```
+
+## Contributing
+
+Contributions are welcome. Please open an issue or submit a pull request.
+
+## License
+
+This project is licensed under the GNU GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](LICENSE) file for details.

@@ -117,9 +117,9 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
 
   const handleSaveAndContinue = useCallback(() => {
     handleSave();
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       onContinue(index);
-    });
+    }, 50);
   }, [handleSave, index, onContinue]);
 
   const classMap = {
