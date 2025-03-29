@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 5173"
+    "preview": "vite preview --port 5000"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.2",
@@ -30,6 +30,7 @@
     "react-codemirror-merge": "^4.23.7",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.3.1",
+    "react-double-marquee": "^1.1.0",
     "react-markdown": "^9.0.3",
     "react-syntax-highlighter": "^15.6.1",
     "rehype-katex": "^7.0.1",

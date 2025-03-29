@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPencil, faSave } from '@fortawesome/free-solid-svg-icons';
 import { Chat } from './storage';
 import { isMobile } from 'react-device-detect';
+import Marquee from 'react-double-marquee';
 
 const ChatListItem: React.FC<{
     chat: Chat;
@@ -78,9 +79,18 @@ const ChatListItem: React.FC<{
                         variant={isSelected ? "primary" : "secondary-outline"}
                         onClick={onSelect}
                         onKeyDown={(e) => e.key === 'Enter' && onSelect()}
-                        className={"me-auto w-100 text-start" + (!isSelected ? " bg-transparent border-0" : "")}
+                        className={"text-start" + (!isSelected ? " bg-transparent border-0" : "")}
+                        style={{ 
+                        flexGrow: 1,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        width: '100%', 
+                        }}
                     >
-                        {chat.name}
+                        <div style={{ width: 'auto', whiteSpace: "nowrap", overflow: 'hidden'}}>
+                        {/* {chat.name} */}
+                        <Marquee style={{width: 'auto'}} scrollWhen={"overflow"}  direction={"left"}>{chat.name}</Marquee>
+                        </div>
                     </Button>
                 )}
                 {isEditing ? (

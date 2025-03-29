@@ -78,8 +78,15 @@ const AppConfigSchema = [
     ],
   },
   {
-    label: 'Basic Parameters',
+    label: 'Other Parameters',
     fields: [
+      {
+        name: 'smoothAnimations',
+        label: 'Use Animations',
+        type: 'boolean',
+        placeholder: false,
+        description: 'Animations can break scroll anchoring in some browsers',
+      },
     ]
   }
 ];

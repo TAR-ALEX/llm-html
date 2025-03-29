@@ -7,6 +7,7 @@ import { Message } from './ChatBubble';
 import LLMApi, { ChatCompletion, ChatCompletionChunk } from './LlamaCppApi';
 import { getThinkingStartAndEnd, LLMConfig, maskToLLMConfigChat, removeThinkingTokens } from './LLMConfig';
 import { AppConfig } from './AppConfig';
+import ScrollView from './ScrollView';
 
 export type LLMChatProps = {
   llmConfig: LLMConfig;
@@ -49,7 +50,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     if (appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) {
       setConfigId(llmConfig.id);
       setMessages((msg) => {
-        var newMsg = [ ...msg ];
+        var newMsg = [...msg];
         if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
           newMsg.shift();
         }
@@ -67,7 +68,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   }, [wholeMessages]);
 
   useEffect(() => {
-    if(isLoading === false) setWholeMessages(messages);
+    if (isLoading === false) setWholeMessages(messages);
   }, [isLoading]);
 
   const fetchAssistantResponse = useCallback(async (
@@ -86,11 +87,11 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     }
 
 
-    if(llmConfig.mask_thinking){
+    if (llmConfig.mask_thinking) {
       let thinking_escapes = getThinkingStartAndEnd(llmConfig);
       messagesHistory = removeThinkingTokens(messagesHistory, thinking_escapes);
     }
-    
+
 
     const openai = new LLMApi({
       apiKey: llmConfig.apiKey ?? '', // Add your OpenAI API key here
@@ -108,10 +109,10 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
     try {
       const stream = await openai.automatic.chat.completions.create({
         messages: messagesHistory.map((m) => {
-            return {
-                role: m.sender,
-                content: m.content,
-            };
+          return {
+            role: m.sender,
+            content: m.content,
+          };
         }),
         ...maskToLLMConfigChat(llmConfig),
         stream: llmConfig.stream ?? true,
@@ -123,7 +124,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
 
       const flushBuffer = () => {
         if (buffer.length === 0) return;
-        if(uuidChat !== messageUUIDRef.current){
+        if (uuidChat !== messageUUIDRef.current) {
           controller.abort();
           return;
         }
@@ -142,7 +143,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         });
       };
 
-      if(llmConfig.stream ?? true){
+      if (llmConfig.stream ?? true) {
         for await (const chunk of stream as AsyncIterable<ChatCompletionChunk>) {
           const contentChunk = chunk.choices[0]?.delta?.content || '';
           buffer += contentChunk;
@@ -163,14 +164,14 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
           cancelAnimationFrame(animationFrameId);
           flushBuffer();
         }
-      }else{
+      } else {
         buffer = (stream as ChatCompletion).choices[0].message.content;
         flushBuffer();
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('API Error:', error);
-        if(onError) onError("Error", `Error fetching response. Check console for details.\n\n${error}`);
+        if (onError) onError("Error", `Error fetching response. Check console for details.\n\n${error}`);
       }
     } finally {
       setIsLoading(false);
@@ -212,7 +213,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
       let messagesHistory = currentMessages.slice(0, targetMessageIndex);
       if (targetMessageIndex > messagesHistory.length - 1) {
         messagesHistory = [...messagesHistory, newAssistantStarter(llmConfig.responsePrefix)];
-      }else{
+      } else {
         messagesHistory[messagesHistory.length - 1].content = llmConfig.responsePrefix;
       }
 
@@ -239,31 +240,139 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
 
     setNewMessage('');
     setTimeout(() => inputRef.current?.focus(), 0);
-    setTimeout(() => {setEditingIndex(null);}, 10);
+    setTimeout(() => { setEditingIndex(null); }, 10);
     await fetchAssistantResponse(updatedMessages);
   }, [wholeMessages, newMessage, isLoading, fetchAssistantResponse]);
 
+
+    // // --- New State and Refs for Scroll Detection ---
+    // const [isScrolledToBottom, setIsScrolledToBottom] = useState(true); // Assume starts at bottom
+    // const scrollContainerRef = useRef(null); // Ref for the main scrollable container
+    // const bottomMarkerRef = useRef(null); // Ref for the div we want to observe
+  
+  
+    // // --- Effect for Intersection Observer ---
+    // useEffect(() => {
+    //   const observer = new IntersectionObserver(
+    //     ([entry]) => {
+    //       // Update state based on whether the marker element is intersecting (visible)
+    //       setIsScrolledToBottom(entry.isIntersecting);
+    //     },
+    //     {
+    //       root: scrollContainerRef.current, // Use the container as the viewport
+    //       rootMargin: '0px', // No margin
+    //       threshold: 0.0, // Trigger as soon as 1 pixel is visible
+    //     }
+    //   );
+  
+    //   // If the marker element exists, start observing it
+    //   if (bottomMarkerRef.current) {
+    //     observer.observe(bottomMarkerRef.current);
+    //   }
+  
+    //   // Cleanup function: disconnect the observer when the component unmounts
+    //   // or before the effect runs again
+    //   return () => {
+    //     if (bottomMarkerRef.current) {
+    //       // eslint-disable-next-line react-hooks/exhaustive-deps
+    //       observer.unobserve(bottomMarkerRef.current);
+    //     }
+    //     observer.disconnect();
+    //   };
+    // }, []); // Empty dependency array means this effect runs once on mount and cleans up on unmount
+
+  // return (
+  //   <Container
+  //     ref={scrollContainerRef} // Attach ref to the scrollable container
+  //     fluid
+  //     className="d-flex h-100 p-0"
+  //     style={{
+  //       overflowAnchor: "auto",
+  //       flexDirection: "column",
+  //       flexGrow: 1,
+  //       flexShrink: 0,
+  //       overflowY: "scroll"
+  //     }}
+  //   >
+  //     <div style={{ overflowAnchor: "auto", display: "flex", minHeight: "2px" }}/>
+  //     <div style={{ overflowAnchor: "none", flex: 1 }}>
+  //       <ChatThread
+  //         key={messageUUID}
+  //         messages={messages}
+  //         onEdit={handleEditMessage}
+  //         onRefresh={handleRefreshMessage}
+  //         onContinue={handleContinueMessage}
+  //         onDelete={handleDeleteMessage}
+  //         isLoading={isLoading}
+  //         editingIndex={editingIndex}
+  //         setEditingIndex={setEditingIndex}
+  //         llmConfig={llmConfig}
+  //         appConfig={appConfig}
+  //       />
+  //     </div>
+  //     {/* The marker div to detect if scrolled to bottom */}
+  //     <div
+  //       ref={bottomMarkerRef} // Attach ref to the marker div
+  //       style={{
+  //         overflowAnchor: isScrolledToBottom?"auto":"none", // Use the state here
+  //         display: "flex", // Keep display flex if needed, or just height
+  //         height: "2px",    // Use height instead of minHeight if it's just a marker
+  //         flexShrink: 0,   // Prevent this tiny div from shrinking
+  //       }}
+  //     />
+  //     <div className='bg-body-tertiary pt-2 pb-0 m-0' style={{ zIndex: "1", position: 'sticky', bottom: "0px" }}
+  //     >
+  //       <ChatInput
+  //         value={newMessage}
+  //         onSend={handleSendMessage}
+  //         onStop={handleStopGeneration}
+  //         isLoading={isLoading}
+  //       />
+  //     </div>
+  //   </Container>
+  // );
+
   return (
-    <Container fluid className="d-flex flex-column gap-2 h-100 overflow-hidden p-0">
-      <ChatThread
-        key={messageUUID}
-        messages={messages}
-        onEdit={handleEditMessage}
-        onRefresh={handleRefreshMessage}
-        onContinue={handleContinueMessage}
-        onDelete={handleDeleteMessage}
-        isLoading={isLoading}
-        editingIndex={editingIndex}
-        setEditingIndex={setEditingIndex}
-        llmConfig={llmConfig}
-        appConfig={appConfig}
-      />
-      <ChatInput
-        value={newMessage}
-        onSend={handleSendMessage}
-        onStop={handleStopGeneration}
-        isLoading={isLoading}
-      />
+    <Container
+      fluid
+      className="d-flex h-100 p-0"
+      style={{
+        overflowAnchor: "auto",
+        flexDirection: "column",
+        flexGrow: 1,
+        flexShrink: 0,
+        overflow: "none"
+      }}
+    >
+      <ScrollView className='m-0 p-0 scroller' style={{ height: '100%' }}>
+      <div className='bg-body-tertiary pt-2 pb-0 m-0'>
+        
+        <ChatThread
+          key={messageUUID}
+          messages={messages}
+          onEdit={handleEditMessage}
+          onRefresh={handleRefreshMessage}
+          onContinue={handleContinueMessage}
+          onDelete={handleDeleteMessage}
+          isLoading={isLoading}
+          editingIndex={editingIndex}
+          setEditingIndex={setEditingIndex}
+          llmConfig={llmConfig}
+          appConfig={appConfig}
+        />
+        
+      </div>
+      </ScrollView>
+      <div style={{ flexGrow: 1, flexShrink: 0 }}></div>
+      <div className='bg-body-tertiary pt-2 pb-0 m-0' >
+        <ChatInput
+          value={newMessage}
+          onSend={handleSendMessage}
+          onStop={handleStopGeneration}
+          isLoading={isLoading}
+        />
+      </div>
+      
     </Container>
   );
 };

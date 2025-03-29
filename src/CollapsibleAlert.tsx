@@ -8,9 +8,10 @@ interface CollapsibleAlertProps {
   title: string;
   children: ReactNode;
   isOpenDefault?: boolean;
+  enableAnimations?: boolean;
 }
 
-const CollapsibleAlert: React.FC<CollapsibleAlertProps> = ({ variant, title, children, isOpenDefault }) => {
+const CollapsibleAlert: React.FC<CollapsibleAlertProps> = ({ variant, title, children, isOpenDefault, enableAnimations }) => {
   const [isOpen, setIsOpen] = useState(isOpenDefault ?? false);
   const timeoutRef = useRef(null);
 
@@ -51,7 +52,7 @@ const CollapsibleAlert: React.FC<CollapsibleAlertProps> = ({ variant, title, chi
       {isOpen && <div className={`border-top border-${variant}-subtle`} />}
 
       {/* Collapsible body */}
-      <Collapse in={isOpen}>
+      <Collapse in={isOpen} timeout={enableAnimations?100:0} >
         <div className="p-0">
           <div className="p-2">
             {children}

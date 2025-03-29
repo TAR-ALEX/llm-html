@@ -6,6 +6,7 @@ export type AppConfig = {
   theme: number;
   replaceSystemPromptOnConfigChange: boolean;
   markdownForUserMessages: boolean;
+  smoothAnimations: boolean;
 }
 
 export const defaultAppConfig: AppConfig = {
@@ -16,4 +17,5 @@ export const defaultAppConfig: AppConfig = {
   theme: 0,
   replaceSystemPromptOnConfigChange: true,
   markdownForUserMessages: false,
+  smoothAnimations: false,
 };

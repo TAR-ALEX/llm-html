@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { LLMConfig } from "./LLMConfig"; // Adjust import path as needed
 import { isMobile } from 'react-device-detect';
+import Marquee from 'react-double-marquee';
 
 const ConfigPresetItem: React.FC<{
     config: LLMConfig;
@@ -40,8 +41,17 @@ const ConfigPresetItem: React.FC<{
                     onClick={onSelect}
                     onKeyDown={(e) => e.key === 'Enter' && onSelect()}
                     className={"me-auto w-100 text-start" + (!isSelected ? " border-0" : "")}
+                    style={{ 
+                        flexGrow: 1,
+                        overflow: 'hidden',
+                        whiteSpace: 'nowrap',
+                        width: '100%', 
+                    }}
                 >
-                    {config.name || "Untitled Preset"}
+                    <div style={{ width: 'auto', whiteSpace: "nowrap", overflow: 'hidden'}}>
+                    {/* {config.name || "Untitled Preset"} */}
+                    <Marquee style={{width: 'auto'}} scrollWhen={"overflow"}  direction={"left"}>{config.name || "Untitled Preset"}</Marquee>
+                    </div>
                 </Button>
 
                 <Button

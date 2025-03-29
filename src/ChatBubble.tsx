@@ -3,6 +3,7 @@ import { ListGroup, Form, Button, Spinner } from 'react-bootstrap';
 import MarkdownRenderer from './MarkdownRenderer';
 import { getThinkingStartAndEnd, LLMConfig } from './LLMConfig';
 import { AppConfig } from './AppConfig';
+import SmoothResize from './SmoothResize';
 
 export type Message = {
   sender: string;
@@ -27,11 +28,13 @@ interface ChatBubbleInterface {
 
 const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onEdit, onRefresh, onContinue, isLoading, isLast, editingIndex, setEditingIndex, llmConfig, appConfig, onDeleteMessage }) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const buttonDivRef = useRef<HTMLDivElement>(null);
   const [editedContent, setEditedContent] = useState(content);
   const isDisabled = isLoading || (editingIndex !== null && editingIndex !== index);
   const isEditing = editingIndex === index;
   const [oldEditHeight, setOldEditHeight] = useState(25);
+
+  const scrollDelay = 150;
 
   // Memoize thinkingTokens to prevent unnecessary reference changes
   const thinkingTokens = useMemo(() => {
@@ -42,12 +45,13 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
 
   useEffect(() => {
     setOldEditHeight(0);
-    if (isEditing && containerRef.current) {
-      containerRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'end',
-        inline: 'nearest'
-      });
+    if (isEditing && buttonDivRef.current) {
+      setTimeout(() => {
+        buttonDivRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+    }, scrollDelay);
     }
   }, [isEditing]);
 
@@ -86,33 +90,33 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
 
   const handleEditClick = useCallback(() => {
     setEditingIndex(index);
-    requestAnimationFrame(() => {
-      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    });
+    setTimeout(() => {
+      buttonDivRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, scrollDelay);
   }, [index, setEditingIndex]);
 
   const handleDeleteClicked = useCallback(() => {
-    if(onDeleteMessage) {onDeleteMessage(index);}
+    if (onDeleteMessage) { onDeleteMessage(index); }
   }, [index]);
 
   const handleClearBelowClicked = useCallback(() => {
-    if(onDeleteMessage) {onDeleteMessage(index+1);}
+    if (onDeleteMessage) { onDeleteMessage(index + 1); }
   }, [index]);
 
   const handleCancel = useCallback(() => {
     setEditingIndex(null);
     setEditedContent(content);
-    requestAnimationFrame(() => {
-      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    });
+    setTimeout(() => {
+      buttonDivRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, scrollDelay);
   }, [content, setEditingIndex]);
 
   const handleSave = useCallback(() => {
     onEdit(index, editedContent);
     setEditingIndex(null);
-    requestAnimationFrame(() => {
-      containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    });
+    setTimeout(() => {
+      buttonDivRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, scrollDelay);
   }, [editedContent, index, onEdit, setEditingIndex]);
 
   const handleSaveAndContinue = useCallback(() => {
@@ -122,28 +126,53 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
     }, 50);
   }, [handleSave, index, onContinue]);
 
+  // const themeDarkness = document.body.getAttribute('data-bs-theme');
+
+  let tintColor = "rgba(255, 255, 255, 0.10)";
+
+
   const classMap = {
     system: 'text-warning-emphasis bg-warning-subtle border border-warning-subtle',
     user: 'text-primary-emphasis bg-primary-subtle border border-primary-subtle',
-    assistant: appConfig?.borderAssistantMessages === false ?  '': 'text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle'
+    assistant: appConfig?.borderAssistantMessages === false ? '' : 'text-secondary-emphasis bg-secondary-subtle border border-secondary-subtle'
   };
-
+  let extraButtonStyle = {};
+  extraButtonStyle = {
+    color: "var(--bs-secondary-text-emphasis)",
+    border: "1px solid var(--bs-secondary-text-emphasis)",
+    backgroundColor: tintColor
+  };
   let buttonGroupStyle = 'outline-secondary';
-  if(sender === 'system') buttonGroupStyle = "outline-warning";
-  else if(sender === 'user') buttonGroupStyle = "outline-primary";
+  if (sender === 'system') {
+    buttonGroupStyle = "outline-warning";
+    extraButtonStyle = {
+      color: "var(--bs-warning-text-emphasis)",
+      border: "1px solid var(--bs-warning-text-emphasis)",
+      backgroundColor: tintColor
+    };
+  }
+  else if (sender === 'user') {
+    buttonGroupStyle = "outline-primary";
+    extraButtonStyle = {
+      color: "var(--bs-primary-text-emphasis)",
+      border: "1px solid var(--bs-primary-text-emphasis)",
+      backgroundColor: tintColor
+    };
+  }
+
 
   return (
     <div
       className={`d-flex text-break justify-content-${sender === 'assistant' ? 'start' : 'end'} mb-2`}
-      ref={containerRef}
       style={{ width: isEditing ? '100%' : 'auto' }}
     >
       <ListGroup.Item
         className={`${classMap[sender] ?? classMap.assistant} rounded p-3`}
         style={{ maxWidth: sender === 'system' || (sender === 'assistant' && appConfig?.wideAssistantMessages) ? '100%' : '80%', width: '100%' }}
       >
-        {isEditing ? (
-          <>
+
+        <SmoothResize style={{ overflowAnchor: "auto"}} disableAnimation={!appConfig.smoothAnimations}>
+          {isEditing ? (
             <Form.Control
               as="textarea"
               ref={textAreaRef}
@@ -159,9 +188,14 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 overflowX: 'hidden', // Prevents horizontal scrolling
                 wordWrap: 'break-word', // Breaks long words to fit
               }}
-            />
-            {/* <ButtonGroup className="d-flex justify-content-end gap-2"> */}
-            <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
+            />) : (
+
+            <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} sender={sender} isLast={isLast}>{content}</MarkdownRenderer>
+          )}
+        </SmoothResize>
+        <div ref={buttonDivRef} className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
+          {isEditing ? (
+            <>
               <Button
                 className='px-2'
                 variant="secondary"
@@ -206,18 +240,16 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                   Send
                 </Button>
               )}
-            </div>
-          </>
-        ) : (
-          <>
-             <MarkdownRenderer thinkingTokens={thinkingTokens} appConfig={appConfig} sender={sender} isLast={isLast}>{content}</MarkdownRenderer>
-             <div className={`d-flex justify-content-${sender === 'user' ? 'end' : 'start'} gap-2 mt-2 align-items-center`}>
+            </>
+          ) : (
+            <>
               <Button
                 className='px-2'
                 variant={buttonGroupStyle}
                 size="sm"
                 onClick={handleEditClick}
                 disabled={isDisabled}
+                style={extraButtonStyle}
               >
                 Edit
               </Button>
@@ -227,19 +259,21 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 size="sm"
                 onClick={handleDeleteClicked}
                 disabled={isDisabled}
+                style={extraButtonStyle}
               >
                 Delete
               </Button>
               {
-              (sender === "system")?<Button
-                className='px-2'
-                variant={buttonGroupStyle}
-                size="sm"
-                onClick={handleClearBelowClicked}
-                disabled={isDisabled}
-              >
-                Reset
-              </Button>:<></>
+                (sender === "system") ? <Button
+                  className='px-2'
+                  variant={buttonGroupStyle}
+                  size="sm"
+                  onClick={handleClearBelowClicked}
+                  disabled={isDisabled}
+                  style={extraButtonStyle}
+                >
+                  Reset
+                </Button> : <></>
               }
               <Button
                 className='px-2'
@@ -247,6 +281,7 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                 size="sm"
                 onClick={() => onRefresh(index)}
                 disabled={isDisabled}
+                style={extraButtonStyle}
               >
                 {(isLoading && isLast) ?
                   <>
@@ -255,10 +290,9 @@ const ChatBubble: React.FC<ChatBubbleInterface> = ({ sender, content, index, onE
                   </>
                   : <>{sender !== 'assistant' ? 'Resend' : 'Refresh'}</>}
               </Button>
-
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </ListGroup.Item>
     </div>
   );

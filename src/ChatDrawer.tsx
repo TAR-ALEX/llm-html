@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import OpenAI from 'openai';
 import LLMChat, { LLMChatProps } from './LLMChat';
-import hash from 'object-hash';
 import { v4 as uuidv4 } from 'uuid';
 import { Button, ListGroup, Navbar, Offcanvas, Stack, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faExchangeAlt, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons';
 import LLMConfigForm from './LLMConfigForm';
 import { LLMConfig } from './LLMConfig';
 import ConfigPresetItem from './ConfigPresetItem';
@@ -36,7 +34,6 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
     const [showRightDrawer, setShowRightDrawer] = useState(false);
     const [rightDrawerView, setRightDrawerView] = useState("llm-presets");
     const [defaultSelectedConfig, setDefaultSelectedConfig] = useState<LLMConfig>(configPresets[0]);
-    const [inputValue, setInputValue] = useState<string>("");
     const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
 
     const selectedChat = chats.find(chat => chat.id === selectedChatId);
@@ -181,15 +178,48 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                             variant="primary"
                             onClick={() => setShowLeftDrawer(true)}
                             className="ms-2"
+                            style={{
+                                overflow: 'hidden',  // Ensure overflow is hidden
+                                whiteSpace: 'nowrap', // Prevent line breaks
+                            }}
                         >
                             <FontAwesomeIcon icon={faBars} /> Chats
                         </Button>
+                        {/* <Button
+                            variant="success"
+                            onClick={() => setShowLeftDrawer(true)}
+                            className="ms-2"
+                            style={{
+                                overflow: 'hidden',  // Ensure overflow is hidden
+                                whiteSpace: 'nowrap', // Prevent line breaks
+                            }}
+                        >
+                            <FontAwesomeIcon icon={faExchangeAlt} /> Mode
+                        </Button> */}
                         <Button
                             variant="warning"
                             onClick={() => { setShowRightDrawer(true); setRightDrawerView("llm-presets"); }}
                             className="ms-auto"
+                            style={{
+                                width: 'auto',       // Shrink-to-fit content
+                                maxWidth: '150px',   // Never exceed 150px
+                                minWidth: '50px',
+                                flexShrink: 1,       // Allows shrinking (default)
+                                flexGrow: 0,         // Prevents forced expansion
+                                overflow: 'hidden',  // Ensure overflow is hidden
+                                whiteSpace: 'nowrap', // Prevent line breaks
+                            }}
                         >
-                            <FontAwesomeIcon icon={faCaretDown} /> {selectedConfig ? selectedConfig.name : "None"}
+                            <Stack style={{width: 'auto'}} direction="horizontal" gap={1}>
+                                <FontAwesomeIcon icon={faCaretDown} />
+                                <div style={{
+                                    overflow: 'hidden',   // Ensure overflow is hidden
+                                    whiteSpace: 'nowrap', // Prevent line breaks
+                                    textOverflow: 'ellipsis' // Add ellipsis
+                                }}>
+                                    {selectedConfig ? selectedConfig.name : "None"}
+                                </div>
+                            </Stack>
                         </Button>
                         <Button
                             variant="outline-secondary"
@@ -328,7 +358,6 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                         initialMessages={selectedChat.messages}
                         onMessagesChange={handleMessagesChange}
                         onError={onError}
-                        inputValue={inputValue}
                     />
                 ) : selectedConfig ? (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">

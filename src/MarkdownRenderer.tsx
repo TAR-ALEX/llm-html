@@ -22,7 +22,15 @@ const remarkMathConfig = {
   singleDollarTextMath: false
 };
 
-// Create the memoized component
+const areSegmentsEqual = (prevProps: {segment: any}, nextProps: {segment: any}) => {
+  return (
+    prevProps.segment.type === nextProps.segment.type &&
+    prevProps.segment.content === nextProps.segment.content &&
+    prevProps.segment.language === nextProps.segment.language &&
+    prevProps.segment.title === nextProps.segment.title
+  );
+};
+
 const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
   ({ segment }) => (
     <SyntaxHighlighter
@@ -36,10 +44,10 @@ const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
     >
       {segment.content}
     </SyntaxHighlighter>
-  )
+  ),
+  areSegmentsEqual
 );
 
-// Create the memoized component
 const MemoizedMarkdown = React.memo<{segment: any}>(
   ({ segment }) => (
     <Markdown
@@ -57,7 +65,8 @@ const MemoizedMarkdown = React.memo<{segment: any}>(
     >
       {segment.content.replace(/\n/g, '  \n')}
     </Markdown>
-  )
+  ),
+  areSegmentsEqual
 );
 
 function CodeCopyBtn({ code }: { code: string }) {
@@ -148,7 +157,7 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, sende
           );
         } else if (segment.type === 'thinking') {
           return (
-            <CollapsibleAlert key={`code-${index}`} title='Thinking' variant="secondary" isOpenDefault={isLast?appConfig?.expandThinkingByDefault:false}>
+            <CollapsibleAlert key={`code-${index}`} enableAnimations={appConfig.smoothAnimations} title='Thinking' variant="secondary" isOpenDefault={isLast?appConfig?.expandThinkingByDefault:false}>
               <div style={{ whiteSpace: 'pre-wrap' }}>
                 {segment.content.trim()}
               </div>

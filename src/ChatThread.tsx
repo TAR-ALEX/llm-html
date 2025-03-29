@@ -54,32 +54,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const spacerRef = useRef<HTMLDivElement>(null);
     const listGroupRef = useRef<HTMLDivElement>(null);
-    const [flexDirection, setFlexDirection] = useState<Property.FlexDirection>('column-reverse');
-
-    const overflowAnchor: Property.OverflowAnchor = supportsOverflowAnchor() ? 'auto' : 'none';
-    //const overflowAnchor: Property.OverflowAnchor = 'none';
-
-    const checkAtBottom = () => {
-        if (containerRef.current) {   
-            setFlexDirection((fd) => {         
-                var distFromBottom = 0;
-                if(fd === 'column-reverse') {
-                    distFromBottom = Math.abs(containerRef.current.scrollTop); 
-                }else{
-                    distFromBottom = containerRef.current.scrollHeight - containerRef.current.clientHeight - containerRef.current.scrollTop;
-                }
-                var newVal: Property.FlexDirection = distFromBottom <= 5 ? 'column-reverse' : 'column';
-
-                // if(!isLoading) newVal = 'column';
-
-                if(fd !== newVal && newVal === "column") {
-                    containerRef.current.style.flexDirection = 'column';
-                    containerRef.current.scrollTop = containerRef.current.scrollHeight - containerRef.current.clientHeight - 15;
-                }
-
-                return newVal;
-            });
-    }};
 
     const listElems = messages.map((message, index) => {
         if(appConfig?.showSystemPrompt === false && message.sender === "system"){
@@ -103,36 +77,34 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         />
     });
 
-    if(overflowAnchor === 'none'){
-        useEffect(() => {
-            checkAtBottom();
-        }, [messages, isLoading]);
-    }
-
-    const handleScroll = useCallback(() => {
-        checkAtBottom();
-    }, [isLoading, messages]);
+    // return (
+    //     <Container
+    //         ref={containerRef}
+    //         style={{
+    //             marginTop: '10px',
+    //             marginBottom: '0px',
+    //             display: 'flex',
+    //             flexDirection: "column",
+    //         }}
+    //     >
+    //             <div ref={listGroupRef} style={{ flexDirection: 'column' }}>
+    //                 {listElems}
+    //             </div>
+    //             <div
+    //                 // ref={bottomMarkerRef} // Attach ref to the marker div
+    //                 style={{
+    //                     overflowAnchor: "auto", // Use the state here
+    //                     display: "flex", // Keep display flex if needed, or just height
+    //                     height: "2px",    // Use height instead of minHeight if it's just a marker
+    //                     flexShrink: 0,   // Prevent this tiny div from shrinking
+    //                 }}
+    //             />
+    //     </Container>
+    // );
 
     return (
-        <Container
-            ref={containerRef}
-            style={{
-                height: '100%',
-                overflowY: 'auto',
-                marginTop: '10px',
-                marginBottom: '0px',
-                display: 'flex',
-                flexDirection: flexDirection,
-                overflowAnchor: overflowAnchor,
-            }}
-            onScroll={overflowAnchor === 'none' ? handleScroll : null}
-        >
-            <div style={{ flexDirection: 'column', flexGrow: 1 }}>
-                <div ref={listGroupRef} style={{ flexDirection: 'column' }}>
-                    {listElems}
-                </div>
-                <div ref={spacerRef} style={{ flexGrow: 1 }}></div> {/* Spacer div */}
-            </div>
+        <Container>
+        {listElems}
         </Container>
     );
 };

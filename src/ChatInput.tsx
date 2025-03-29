@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, memo, useState, useCallback } from 'react';
-import { Form, Button, Container, Stack, Badge, CloseButton } from 'react-bootstrap';
+import { Form, Button, Container, Stack, Badge, CloseButton, Spinner } from 'react-bootstrap';
 import { isMobile } from 'react-device-detect';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -175,9 +175,9 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
       onDragOver={handleDragOver}
       onDrop={handleDrop}
       className="d-flex gap-2"
-      style={{ marginBottom: '10px' }}
+      style={{ paddingBottom: '10px' }}
     >
-      <Stack>
+      <Stack className='px-0 mx-0'>
         <Stack direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
           {files.map((file) => (
             <h5 key={file.id}>
@@ -221,9 +221,27 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
             variant={isLoading ? 'danger' : 'primary'}
             onClick={isLoading ? onStop : () => sendWithFiles(currentValue)}
             disabled={!isLoading && !currentValue.trim()}
-            style={{ width: '100px', height: '100%' }}
+            style={{
+              width: '100px',
+              height: '100%',
+              // border: "none",
+              animation: isLoading ? 'pulseBtnStop 2.5s infinite ease-in-out' : 'none'
+            }}
           >
-            {isLoading ? 'Stop' : 'Send'}
+            {isLoading ? (
+              <>
+                <style>
+                  {`
+                    @keyframes pulseBtnStop {
+                      0% { background-color: var(--bs-danger); }
+                      50% { background-color: var(--bs-secondary); }
+                      100% { background-color: var(--bs-danger); }
+                    }
+                  `}
+                </style>
+                Stop
+              </>
+            ) : 'Send'}
           </Button>
           {children}
         </Stack>
