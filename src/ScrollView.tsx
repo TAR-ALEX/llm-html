@@ -70,10 +70,23 @@ const ScrollView: React.FC<ScrollViewProps> = ({
     const currentScrollHeight = scrollElement.scrollHeight;
     const heightDifference = currentScrollHeight - prevScrollHeight;
 
+    // Detect if content transitioned from non-overflowing to overflowing
+    const prevClientHeight = prevScrollHeightRef.current === 0 ? scrollElement.clientHeight : scrollElement.clientHeight;
+    const wasNotOverflowingBefore = prevScrollHeight <= prevClientHeight;
+    const isOverflowingNow = currentScrollHeight > scrollElement.clientHeight;
+    const startedOverflowing = wasNotOverflowingBefore && isOverflowingNow;
+
+    if (startedOverflowing) {
+        setIsMarkerVisible(true);
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
+
     // If content grew and we were at/near the bottom or forceStick is true
     if (heightDifference > 0 && (wasAtBottomRef.current || forceStick || stickToBottom)) {
-      // Only manually scroll if scroll anchoring isn't supported or isn't working
-      if (!supportsScrollAnchoring || !isMarkerVisible) {
+      if (
+        !supportsScrollAnchoring ||
+        !isMarkerVisible
+      ) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
     }
@@ -130,14 +143,14 @@ const ScrollView: React.FC<ScrollViewProps> = ({
         ...style,
       }}
     >
-      <div 
-        className="tmp" 
-        style={{ 
-          display: "flex", 
-          flexDirection: "column", 
-          overflowAnchor: 'none', 
-          flexGrow: 1, 
-          flexShrink: 0 
+      <div
+        className="tmp"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          overflowAnchor: 'none',
+          flexGrow: 1,
+          flexShrink: 0
         }}
       >
         {children}
