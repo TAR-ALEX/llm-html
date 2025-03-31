@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Form, Alert, Button, Accordion, Row, Col, Stack } from 'react-bootstrap';
+import { Container, Form, Alert, Button, Accordion, Row, Col, Stack, Modal } from 'react-bootstrap';
 
 const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled) => {
   const enabled = field.optional ? propsEnabled : true;
@@ -248,24 +248,23 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
           }
         }
       }
-      // else if(getType[field.name] === 'boolean'){
-      //   acc[field.name] = acc[field.name] ? 'true' : 'false';
-      // }
     });
     return acc;
-  }, { ...initialState }); // Start with a copy of the provided initialState
+  }, { ...initialState });
 
   const [formData, setFormData] = useState(computedInitialState);
   const [errors, setErrors] = useState([]);
+  const [jsonErrors, setJsonErrors] = useState([]);
+
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonEdit, setJsonEdit] = useState('');
   const [enabledFields, setEnabledFields] = useState(() => {
     const initialEnabled = {};
     formConfig.forEach(section => {
       section.fields.forEach(field => {
-        // Check if computedInitialState has a value and use it to determine the enabled state
         if (initialState && initialState[field.name] !== undefined) {
           initialEnabled[field.name] = true;
         } else {
-          // Fallback to the original logic
           if (field.optional && (field.defaultValue === '' || field.defaultValue === undefined || field.defaultValue === null)) {
             initialEnabled[field.name] = false;
           } else {
@@ -279,11 +278,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
 
   const handleChange = (type, e) => {
     const { name, value, checked } = e.target;
-    //var val = type === 'checkbox' ? checked : ((type === "number" || type === 'slider') ? Number(value) : value);
-
     var val;
-
-    console.log(type);
 
     if (type === 'checkbox') {
       val = checked;
@@ -302,7 +297,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
   };
 
   const handleToggleEnabled = (fieldName) => (e) => {
-    // Only update state for optional fields
     const field = formConfig
       .flatMap(s => s.fields)
       .find(f => f.name === fieldName);
@@ -341,7 +335,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
   };
 
   const computeResult = () => {
-    // Validate fields and collect errors
     const newErrors = formConfig.flatMap(section =>
       section.fields
         .map(field => validateField(field, formData[field.name]))
@@ -351,7 +344,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     setErrors(newErrors);
     if (newErrors.length > 0) return;
 
-    // Process form data, excluding disabled fields and adding enabled flags
     var filteredData = Object.keys(formData).reduce((acc, key) => {
       if (enabledFields[key] && formData[key] !== null) {
           acc[key] = formData[key];
@@ -363,7 +355,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       if(getType[key] == 'json'){
         try{
           acc[key] = JSON.parse(filteredData[key]);
-          console.log("pared json:", acc[key]);
         }catch(error){
           console.error(error);
         }
@@ -381,7 +372,6 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
       return acc;
     }, {});
 
-    // Ensure all initialState fields exist in filteredData
     if(initialState){
       Object.keys(initialState).forEach(key => {
         if (!(key in filteredData) && !(key in enabledFields)) {
@@ -394,17 +384,75 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
 
   const handleSaveDup = () => {
     let result = computeResult();
-    console.log('made duplicate config:', result);
     if(onDuplicate) onDuplicate(result);
   }
 
   const handleSubmit = (e) => {
     e.preventDefault();
     let result = computeResult();
-    console.log('saved config:', result);
     onSubmit(result);
   };
 
+  const handleShowJson = () => {
+    const result = computeResult();
+    if (result) {
+      // Create a copy without the id field
+      const { id, ...jsonToShow } = result;
+      setJsonEdit(JSON.stringify(jsonToShow, null, 2));
+      setShowJsonModal(true);
+    }
+  };
+  
+  const handleJsonSave = () => {
+    try {
+      const parsedJson = JSON.parse(jsonEdit);
+      setJsonErrors([]); // Clear previous errors
+
+      // Validate the JSON against formConfig
+      const validationErrors = [];
+      
+      // Check required fields
+      formConfig.forEach(section => {
+        section.fields.forEach(field => {
+          if (!field.optional && parsedJson[field.name] === undefined) {
+            validationErrors.push(`Missing required field: ${field.label}`);
+          }
+        });
+      });
+
+      if (validationErrors.length > 0) {
+        setJsonErrors(validationErrors);
+        return;
+      }
+
+      // Update form data with the parsed JSON
+      const newFormData = { ...formData };
+      Object.keys(parsedJson).forEach(key => {
+        if (getType[key] === 'json' && typeof parsedJson[key] !== 'string') {
+          newFormData[key] = JSON.stringify(parsedJson[key], null, 2);
+        } else {
+          newFormData[key] = parsedJson[key];
+        }
+      });
+      
+      setFormData(newFormData);
+      
+      // Update enabled fields
+      const newEnabledFields = { ...enabledFields };
+      formConfig.forEach(section => {
+        section.fields.forEach(field => {
+          if (field.optional && parsedJson[field.name] !== undefined) {
+            newEnabledFields[field.name] = true;
+          }
+        });
+      });
+      setEnabledFields(newEnabledFields);
+      
+      setShowJsonModal(false);
+    } catch (e) {
+      setJsonErrors([`Invalid JSON: ${e.message}`]);
+    }
+  };
 
   return (
     <Form className="h-100 d-flex flex-column" onSubmit={handleSubmit} noValidate>
@@ -446,19 +494,59 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
         </Alert>
       )}
 
-    <Stack direction="horizontal" className="mt-3" gap={2}>
-      <Button variant="primary" type="submit">
-        Save
-      </Button>
-      {(onDuplicate) ?
-        <Button variant="warning" onClick={handleSaveDup}>
-          Save Copy
-        </Button> : <></>
-      }
-      <Button variant="secondary" onClick={handleCancel}>
-        Cancel
-      </Button>
-    </Stack>
+      <Stack direction="horizontal" className="mt-3" gap={2}>
+        <Button variant="primary text-truncate" type="submit">
+          Save
+        </Button>
+        {onDuplicate && (
+          <Button variant="warning text-truncate" onClick={handleSaveDup}>
+            Save Copy
+          </Button>
+        )}
+        <Button variant="secondary text-truncate" onClick={handleCancel}>
+          Cancel
+        </Button>
+        <Button variant="danger text-truncate" onClick={handleShowJson} className="ms-auto">
+          Raw
+        </Button>
+      </Stack>
+
+      <Modal show={showJsonModal} onHide={() => setShowJsonModal(false)} size="xl"> {/* Changed to xl for larger size */}
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Raw JSON</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Control
+            as="textarea"
+            rows={20} // Increased rows
+            value={jsonEdit}
+            onChange={(e) => setJsonEdit(e.target.value)}
+            style={{ 
+              fontFamily: 'monospace',
+              minHeight: '400px' // Added minimum height
+            }}
+            className={jsonErrors.length > 0 ? 'border-danger' : ''} // Highlight if errors
+          />
+          {jsonErrors.length > 0 && (
+            <Alert variant="danger" className="mb-0 mt-1">
+              <Alert.Heading>JSON Validation Errors:</Alert.Heading>
+              <ul className="mb-0">
+                {jsonErrors.map((error, index) => (
+                  <li key={index}>{error}</li>
+                ))}
+              </ul>
+            </Alert>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowJsonModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleJsonSave}>
+            Apply Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Form>
   );
 };
