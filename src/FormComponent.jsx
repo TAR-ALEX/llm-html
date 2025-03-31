@@ -518,12 +518,12 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
         <Modal.Body>
           <Form.Control
             as="textarea"
-            rows={20} // Increased rows
+            rows={3}
             value={jsonEdit}
             onChange={(e) => setJsonEdit(e.target.value)}
             style={{ 
               fontFamily: 'monospace',
-              minHeight: '400px' // Added minimum height
+              minHeight: '60vh'
             }}
             className={jsonErrors.length > 0 ? 'border-danger' : ''} // Highlight if errors
           />
