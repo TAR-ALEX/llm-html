@@ -2,6 +2,7 @@ import React, { useRef, useEffect, memo, useState, useCallback } from 'react';
 import { Form, Button, Container, Stack, Badge, CloseButton, Spinner } from 'react-bootstrap';
 import { isMobile } from 'react-device-detect';
 import { v4 as uuidv4 } from 'uuid';
+import SmoothResize from './SmoothResize';
 
 const extensionMapping: { [key: string]: string } = {
   py: 'python',
@@ -55,15 +56,8 @@ type ChatInputProps = {
   children?: React.ReactNode;
 };
 
-function countNewlines(str: string) {
-  const matches = str.match(/\r?\n/g);
-  if (str.length === 0) return 0;
-  return (matches?.length ?? 0) + 1;
-}
-
 const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading, children }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [newlinesCount, setNewlinesCount] = useState(0);
   const [currentValue, setCurrentValue] = useState(value);
   const [files, setFiles] = useState<{ id: string; name: string; content: string }[]>([]);
 
@@ -85,15 +79,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
   useEffect(() => {
     const resizeFunc = () => {
       if (inputRef.current) {
-        const nlCount = countNewlines(currentValue);
-        if (nlCount !== newlinesCount) {
-          inputRef.current.style.height = '70px';
-          inputRef.current.style.height = `${Math.max(
-            Math.min(inputRef.current.scrollHeight, 400),
-            70
-          )}px`;
-          setNewlinesCount(nlCount);
-        }
+        inputRef.current.style.height = '70px';
         inputRef.current.style.height = `${Math.max(
           Math.min(inputRef.current.scrollHeight, 400),
           70
@@ -101,7 +87,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
       }
     };
     resizeFunc();
-  }, [currentValue, newlinesCount]);
+  }, [currentValue]);
 
   const handleDeleteFile = (fileId: string) => {
     setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
@@ -171,82 +157,91 @@ const ChatInput: React.FC<ChatInputProps> = ({ value, onSend, onStop, isLoading,
   };
 
   return (
-    <Container
-      onDragOver={handleDragOver}
-      onDrop={handleDrop}
-      className="d-flex gap-2"
-      style={{ paddingBottom: '10px' }}
+    <SmoothResize
+      disableAnimation={true}
+      shrinkDebounceMs={25}
+      style={{
+        flexDirection: "column-reverse",
+        display: "flex"
+      }}
     >
-      <Stack className='px-0 mx-0'>
-        <Stack direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
-          {files.map((file) => (
-            <h5 key={file.id}>
-              <Badge bg="secondary-subtle" className="text-secondary-emphasis mb-1">
-                <Stack direction="horizontal">
-                  {file.name}
-                  <CloseButton
-                    onClick={() => handleDeleteFile(file.id)}
-                    aria-label={`Remove ${file.name}`}
-                  />
-                </Stack>
-              </Badge>
-            </h5>
-          ))}
-        </Stack>
-        <Stack direction="horizontal" gap={1}>
-          <Form.Control
-            ref={inputRef}
-            as="textarea"
-            placeholder="Type your message here..."
-            value={currentValue}
-            onChange={(e) => setCurrentValue(e.target.value)}
-            onPaste={handlePaste}
-            className="overflow-y-auto flex-grow-1"
-            style={{
-              resize: 'none',
-              minHeight: '0px',
-              maxHeight: 'calc(33.333vh)',
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
-                e.preventDefault();
-                if (!isLoading) {
-                  sendWithFiles(currentValue);
+      <Container
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className="d-flex gap-2"
+        style={{ paddingBottom: '10px' }}
+      >
+        <Stack className='px-0 mx-0'>
+          <Stack direction="horizontal" gap={1} style={{ flexWrap: 'wrap' }}>
+            {files.map((file) => (
+              <h5 key={file.id}>
+                <Badge bg="secondary-subtle" className="text-secondary-emphasis mb-1">
+                  <Stack direction="horizontal">
+                    {file.name}
+                    <CloseButton
+                      onClick={() => handleDeleteFile(file.id)}
+                      aria-label={`Remove ${file.name}`}
+                    />
+                  </Stack>
+                </Badge>
+              </h5>
+            ))}
+          </Stack>
+          <Stack direction="horizontal" gap={1}>
+            <Form.Control
+              ref={inputRef}
+              as="textarea"
+              placeholder="Type your message here..."
+              value={currentValue}
+              onChange={(e) => setCurrentValue(e.target.value)}
+              onPaste={handlePaste}
+              className="overflow-y-auto flex-grow-1"
+              style={{
+                resize: 'none',
+                minHeight: '0px',
+                maxHeight: 'calc(33.333vh)',
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !isMobile) {
+                  e.preventDefault();
+                  if (!isLoading) {
+                    sendWithFiles(currentValue);
+                  }
                 }
-              }
-            }}
-            autoFocus
-          />
-          <Button
-            variant={isLoading ? 'danger' : 'primary'}
-            onClick={isLoading ? onStop : () => sendWithFiles(currentValue)}
-            disabled={!isLoading && !currentValue.trim()}
-            style={{
-              width: '100px',
-              height: '100%',
-              // border: "none",
-              animation: isLoading ? 'pulseBtnStop 2.5s infinite ease-in-out' : 'none'
-            }}
-          >
-            {isLoading ? (
-              <>
-                <style>
-                  {`
-                    @keyframes pulseBtnStop {
-                      0% { background-color: var(--bs-danger); }
-                      50% { background-color: var(--bs-secondary); }
-                      100% { background-color: var(--bs-danger); }
-                    }
-                  `}
-                </style>
-                Stop
-              </>
-            ) : 'Send'}
-          </Button>
-          {children}
+              }}
+              autoFocus
+            />
+            <Button
+              variant={isLoading ? 'danger' : 'primary'}
+              onClick={isLoading ? onStop : () => sendWithFiles(currentValue)}
+              disabled={!isLoading && !currentValue.trim()}
+              style={{
+                width: '100px',
+                height: '100%',
+                // border: "none",
+                animation: isLoading ? 'pulseBtnStop 2.5s infinite ease-in-out' : 'none'
+              }}
+            >
+              {isLoading ? (
+                <>
+                  <style>
+                    {`
+                      @keyframes pulseBtnStop {
+                        0% { background-color: var(--bs-danger); }
+                        50% { background-color: var(--bs-secondary); }
+                        100% { background-color: var(--bs-danger); }
+                      }
+                    `}
+                  </style>
+                  Stop
+                </>
+              ) : 'Send'}
+            </Button>
+            {children}
+          </Stack>
         </Stack>
-      </Stack>
-    </Container>
+      </Container>
+    </SmoothResize>
   );
 };
 

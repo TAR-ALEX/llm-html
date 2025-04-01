@@ -32,19 +32,43 @@ const areSegmentsEqual = (prevProps: {segment: any}, nextProps: {segment: any}) 
 };
 
 const MemoizedSyntaxHighlighter = React.memo<{segment: any}>(
-  ({ segment }) => (
-    <SyntaxHighlighter
+  ({ segment }) => {
+    let language = segment.language;
+    if(segment.language === "c++"){
+      language = "cpp";
+    }
+    if(segment.language === "c#"){
+      language = "csharp";
+    }
+    return <SyntaxHighlighter
       style={{
-        ...dracula, 
+        ...dracula,
       }}
       className="m-0 px-3 pb-3 pt-3 rounded-0"
-      language={segment.language}
+      language={language}
       PreTag="div"
       showLineNumbers={false}
     >
       {segment.content}
     </SyntaxHighlighter>
-  ),
+  },
+  areSegmentsEqual
+);
+
+const MemoizedCodeMirror = React.memo<{segment: any}>(
+  ({ segment }) => {
+    return <CodeMirror
+      value={segment.content}
+      theme={githubDark}
+      editable={false}
+      extensions={[getCodeMirrorExtension(segment.language)]}
+      basicSetup={{
+        lineNumbers: false, // Hide line numbers
+        foldGutter: false, // Disable folding gutter
+      }}
+      style={{border: "none", padding: "0px", margin: "0px"}}
+    />
+  }, 
   areSegmentsEqual
 );
 
@@ -116,32 +140,21 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, sende
             <div className="blog-pre mt-0 mb-2" key={`code-${index}`}>{/*style={{color: textColor, background: bgColorHat}}*/}
               {
                 (titleDiv) ? (
-                  <div className="d-flex px-2 align-items-center justify-content-between code-header-style" style={{color: textColor, background: bgColorHat, paddingTop:"0.2em", paddingBottom:"0.2em",}}>
-                    {titleDiv}                
+                  <div className="d-flex px-2 align-items-center justify-content-between code-header-style" style={{color: textColor, background: bgColorHat, paddingTop:"0.2em", paddingBottom:"0.2em", zIndex: "1000"}}>
+                    {titleDiv}
                     <CodeCopyBtn code={segment.content} />
                   </div>
                 ) : (
-                  <div style={{height: "100%",  position: "absolute", right: "0px", top: "0px"}}>
+                  <div style={{height: "100%",  position: "absolute", right: "0px", top: "0px", zIndex: "1000"}}>
                     <div className="px-2" style={{position: "sticky", paddingTop:"0.2em", paddingBottom:"0.2em", top: "0px", right: "0px", display: "inline-block"}}>{/*, background: bgColorCode, boxShadow: `${bgColorCode} 0px 0px 5px 5px`*/}
-                    <CodeCopyBtn code={segment.content} />
+                      <CodeCopyBtn code={segment.content} />
                     </div>
                   </div>
                 )
               }
-              
+
               {mode === 'codemirror' ? (
-                <Alert className="p-0" variant="dark">
-                  <CodeMirror
-                    value={segment.content}
-                    theme={githubDark}
-                    editable={false}
-                    extensions={[getCodeMirrorExtension(segment.language)]}
-                    basicSetup={{
-                      lineNumbers: false, // Hide line numbers
-                      foldGutter: false, // Disable folding gutter
-                    }}
-                  />
-                </Alert>
+                <MemoizedCodeMirror key={`code-${index}`} segment={segment} />
               ) : (<></>)}
               {mode === 'syntaxhighlighter' ? (
                 <MemoizedSyntaxHighlighter key={`code-${index}`} segment={segment}/>
@@ -169,9 +182,9 @@ function MarkdownRenderer({ thinkingTokens, children: markdown, appConfig, sende
               <MemoizedMarkdown key={`text-${index}`} segment={segment}/>
             );
           }else{
-          return( <div key={`text-${index}`} style={{ whiteSpace: 'pre-wrap' }}>
-            {segment.content}
-          </div>);
+            return( <div key={`text-${index}`} style={{ whiteSpace: 'pre-wrap' }}>
+              {segment.content}
+            </div>);
           }
           
         }
@@ -221,7 +234,7 @@ function parseMarkdown(
   regexBlockTypes.push({
     blockType: 'code',
     regexStart: [
-      /(?:\#\#\#\s(?<filename>[\S]+)\n)?```\s*?(?<language>\w+)?\n/gm, 
+      /(?:\#\#\#\s(?<filename>[\S]+)\n)?```\s*?(?<language>\S+)?\n/gm,
       /```\s*?(?<language>\w+)?(?:\s+filename=(?<filename>[\S]+))?\n/gm
     ],
     regexEnd: [/\n\s*```/gm],
