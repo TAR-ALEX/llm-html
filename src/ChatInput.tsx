@@ -19,6 +19,7 @@ const extensionMapping: { [key: string]: string } = {
   kt: 'kotlin',
   rs: 'rust',
   tsx: 'tsx',
+  jsx: 'jsx',
   md: 'markdown',
   txt: 'text',
   yaml: 'yaml',

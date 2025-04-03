@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Container, Form, Alert, Button, Accordion, Row, Col, Stack, Modal } from 'react-bootstrap';
+import JsonEditorModal from './JsonEditorModal';
 
-const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled) => {
+const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled, setModal) => {
   const enabled = field.optional ? propsEnabled : true;
 
   const commonProps = {
@@ -12,7 +13,7 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
   };
 
   const isInvalid = enabled && (
-    (field.type === "number" && (
+    ((field.type === "number" || field.type === "slider") && (
       (typeof value !== "number" && isNaN(value)) ||
       (field.min !== undefined && value < field.min) ||
       (field.max !== undefined && value > field.max)
@@ -218,6 +219,19 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
           )}
         </Form.Group>
       );
+    case 'button':
+      return (
+        <Form.Group className="mb-3" key={field.name}>
+          <Stack>
+          <Button variant={field.variant || 'primary'} onClick={() => {field.onClick(setModal, ()=> {setModal(<Modal show={false}/>);});}}>
+            {field.label}
+          </Button>
+          {field.description && (
+            <Form.Text className="text-muted">{field.description}</Form.Text>
+          )}
+          </Stack>
+        </Form.Group>
+      );
     default:
       return null;
   }
@@ -257,7 +271,9 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
   const [jsonErrors, setJsonErrors] = useState([]);
 
   const [showJsonModal, setShowJsonModal] = useState(false);
+  const [modal, setModal] = useState(<Modal show={false}/>);
   const [jsonEdit, setJsonEdit] = useState('');
+  
   const [enabledFields, setEnabledFields] = useState(() => {
     const initialEnabled = {};
     formConfig.forEach(section => {
@@ -366,6 +382,8 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
         }catch(e){
           acc[key] = 0;
         }
+      } else if (getType[key] === 'button') {
+        delete acc[key];
       }else{
         acc[key] = filteredData[key];
       }
@@ -393,64 +411,74 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     onSubmit(result);
   };
 
+  const validateJson = (jsonEdit) => {
+    try {
+      const parsedJson = JSON.parse(jsonEdit);
+      const validationErrors = [];
+
+      // Check required fields
+      formConfig.forEach(section => {
+        section.fields.forEach(field => {
+          if ((!field.optional && field.type !== "button") && parsedJson[field.name] === undefined) {
+            validationErrors.push(`Missing required field: ${field.name}`);
+          }
+        });
+      });
+
+      return validationErrors;
+    } catch (e) {
+      return [`Invalid JSON: ${e.message}`];
+    }
+  };
+
+  const handleJsonSave = (parsedJson) => {
+    // Update form data with the parsed JSON
+    const newFormData = { ...formData };
+    Object.keys(parsedJson).forEach(key => {
+      if (getType[key] === 'json' && typeof parsedJson[key] !== 'string') {
+        newFormData[key] = JSON.stringify(parsedJson[key], null, 2);
+      } else {
+        newFormData[key] = parsedJson[key];
+      }
+    });
+
+    setFormData(newFormData);
+
+    // Update enabled fields
+    const newEnabledFields = { ...enabledFields };
+    formConfig.forEach(section => {
+      section.fields.forEach(field => {
+        if (field.optional && parsedJson[field.name] !== undefined) {
+          newEnabledFields[field.name] = true;
+        }
+      });
+    });
+    setEnabledFields(newEnabledFields);
+
+    setModal(<Modal show={false} />);
+  };
+
   const handleShowJson = () => {
     const result = computeResult();
     if (result) {
       // Create a copy without the id field
       const { id, ...jsonToShow } = result;
       setJsonEdit(JSON.stringify(jsonToShow, null, 2));
-      setShowJsonModal(true);
-    }
-  };
-  
-  const handleJsonSave = () => {
-    try {
-      const parsedJson = JSON.parse(jsonEdit);
-      setJsonErrors([]); // Clear previous errors
-
-      // Validate the JSON against formConfig
-      const validationErrors = [];
-      
-      // Check required fields
-      formConfig.forEach(section => {
-        section.fields.forEach(field => {
-          if (!field.optional && parsedJson[field.name] === undefined) {
-            validationErrors.push(`Missing required field: ${field.label}`);
-          }
-        });
-      });
-
-      if (validationErrors.length > 0) {
-        setJsonErrors(validationErrors);
-        return;
-      }
-
-      // Update form data with the parsed JSON
-      const newFormData = { ...formData };
-      Object.keys(parsedJson).forEach(key => {
-        if (getType[key] === 'json' && typeof parsedJson[key] !== 'string') {
-          newFormData[key] = JSON.stringify(parsedJson[key], null, 2);
-        } else {
-          newFormData[key] = parsedJson[key];
-        }
-      });
-      
-      setFormData(newFormData);
-      
-      // Update enabled fields
-      const newEnabledFields = { ...enabledFields };
-      formConfig.forEach(section => {
-        section.fields.forEach(field => {
-          if (field.optional && parsedJson[field.name] !== undefined) {
-            newEnabledFields[field.name] = true;
-          }
-        });
-      });
-      setEnabledFields(newEnabledFields);
-      
-      setShowJsonModal(false);
-    } catch (e) {
-      setJsonErrors([`Invalid JSON: ${e.message}`]);
+      setModal(
+        <JsonEditorModal
+          show={true}
+          onHide={() => { setModal(<Modal show={false} />); }}
+          jsonValue={JSON.stringify(jsonToShow, null, 2)}
+          onSave={(value) => {
+            const parsed = JSON.parse(value);
+            handleJsonSave(parsed); // Or just handleJsonSave directly if it takes the string
+          }}
+          validateJson={(json) => {
+            return validateJson(json);
+          }}
+          title="Edit Raw JSON"
+        />
+      );
     }
   };
 
@@ -471,7 +499,8 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
                           formData[field.name],
                           handleChange,
                           enabledFields[field.name],
-                          handleToggleEnabled(field.name)
+                          handleToggleEnabled(field.name),
+                          setModal
                         )}
                       </Col>
                     ))}
@@ -511,42 +540,8 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
         </Button>
       </Stack>
 
-      <Modal show={showJsonModal} onHide={() => setShowJsonModal(false)} size="xl"> {/* Changed to xl for larger size */}
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Raw JSON</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            value={jsonEdit}
-            onChange={(e) => setJsonEdit(e.target.value)}
-            style={{ 
-              fontFamily: 'monospace',
-              minHeight: '60vh'
-            }}
-            className={jsonErrors.length > 0 ? 'border-danger' : ''} // Highlight if errors
-          />
-          {jsonErrors.length > 0 && (
-            <Alert variant="danger" className="mb-0 mt-1">
-              <Alert.Heading>JSON Validation Errors:</Alert.Heading>
-              <ul className="mb-0">
-                {jsonErrors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            </Alert>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowJsonModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleJsonSave}>
-            Apply Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {modal}
+
     </Form>
   );
 };
