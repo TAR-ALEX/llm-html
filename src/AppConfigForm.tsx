@@ -115,19 +115,30 @@ const AppConfigSchema = [
             }
             return JSON.stringify(storageObject, null, 2);
           };
-          
+
           const storageString = localStorageToJsonString();
           setModal(
             <JsonEditorModal
               show={true}
-              readonly={true}
+              readonly={false} // Allow editing
               onHide={() => hideModal()}
               jsonValue={storageString}
               title="localcache"
-              onSave={function (): void {
-                alert('Function not implemented.');
-                hideModal();
-                throw new Error('Function not implemented.');
+              onSave={(jsonValue: string) => {
+                try {
+                  const parsedJson = JSON.parse(jsonValue);
+                  localStorage.clear();
+                  for (const key in parsedJson) {
+                    if (parsedJson.hasOwnProperty(key)) {
+                      localStorage.setItem(key, JSON.stringify(parsedJson[key]));
+                    }
+                  }
+                  alert('localcache saved successfully.\nPage will reload to pull new config');
+                  hideModal();
+                  location.reload();
+                } catch (e) {
+                  alert('Failed to save localcache. Invalid JSON.');
+                }
               }}
             />
           );

@@ -223,12 +223,20 @@ const generateField = (field, value, handleChange, propsEnabled, onToggleEnabled
       return (
         <Form.Group className="mb-3" key={field.name}>
           <Stack>
-          <Button variant={field.variant || 'primary'} onClick={() => {field.onClick(setModal, ()=> {setModal(<Modal show={false}/>);});}}>
-            {field.label}
-          </Button>
-          {field.description && (
-            <Form.Text className="text-muted">{field.description}</Form.Text>
-          )}
+            <Button variant={field.variant || 'primary'} onClick={() => {
+              field.onClick(setModal, () => {
+                setModal(prevModal => {
+                  return React.cloneElement(prevModal, { show: false });
+                });
+              }
+              );
+            }
+            }>
+              {field.label}
+            </Button>
+            {field.description && (
+              <Form.Text className="text-muted">{field.description}</Form.Text>
+            )}
           </Stack>
         </Form.Group>
       );
@@ -268,11 +276,7 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
 
   const [formData, setFormData] = useState(computedInitialState);
   const [errors, setErrors] = useState([]);
-  const [jsonErrors, setJsonErrors] = useState([]);
-
-  const [showJsonModal, setShowJsonModal] = useState(false);
   const [modal, setModal] = useState(<Modal show={false}/>);
-  const [jsonEdit, setJsonEdit] = useState('');
   
   const [enabledFields, setEnabledFields] = useState(() => {
     const initialEnabled = {};
@@ -463,11 +467,14 @@ const FormComponent = ({ formConfig = [], initialState = {}, onSubmit, onDuplica
     if (result) {
       // Create a copy without the id field
       const { id, ...jsonToShow } = result;
-      setJsonEdit(JSON.stringify(jsonToShow, null, 2));
       setModal(
         <JsonEditorModal
           show={true}
-          onHide={() => { setModal(<Modal show={false} />); }}
+          onHide={() => { 
+            setModal(prevModal => {
+              return React.cloneElement(prevModal, { show: false });
+            });
+          }}
           jsonValue={JSON.stringify(jsonToShow, null, 2)}
           onSave={(value) => {
             const parsed = JSON.parse(value);
