@@ -1,114 +1,54 @@
 import React, { useState, useEffect, useRef } from 'react';
 import LLMChat, { LLMChatProps } from './LLMChat';
 import { v4 as uuidv4 } from 'uuid';
-import { Button, ListGroup, Navbar, Offcanvas, Stack, Container } from 'react-bootstrap';
+import { Button, Navbar, Offcanvas, Stack, Container } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faExchangeAlt, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons';
 import LLMConfigForm from './LLMConfigForm';
 import { LLMConfig } from './LLMConfig';
-import ConfigPresetItem from './ConfigPresetItem';
-import { Chat, loadChats, loadSelectedChatId, saveSelectedChatId, loadConfigPresets, addChat, deleteChat, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadSelectedConfigId, saveSelectedConfigId, loadAppConfig, saveAppConfig } from './storage';
-import ChatListItem from './ChatListItem';
+import { Chat, loadConfigPresets, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadAppConfig, saveAppConfig, loadSelectedChat } from './storage';
 import AppConfigForm from './AppConfigForm';
 import { AppConfig, defaultAppConfig } from './AppConfig';
+import ChatListGroup from './ChatListGroup';
+import ConfigPresetGroup, { getUniqueName } from './ConfigPresetGroup';
 
 interface ChatDrawerInterface {
     onError?: (header: string, content: string) => void;
 }
 
-function generateDefaultLLMConfig() {
-    return {
-        id: uuidv4(),
-        name: `Default`,
-        baseURL: "http://localhost:8080",
-        chatCompletionsPath: "/v1/chat/completions",
-        defaultSystemPrompt: "You are a helpful assistant.",
-    };
-}
-
 const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
-    const [chats, setChats] = useState<Chat[]>([]);
     const [configPresets, setConfigPresets] = useState<LLMConfig[]>([]);
-    const [selectedChatId, setSelectedChatId] = useState<string | null>();
     const [showLeftDrawer, setShowLeftDrawer] = useState(false);
     const [showRightDrawer, setShowRightDrawer] = useState(false);
     const [rightDrawerView, setRightDrawerView] = useState("llm-presets");
-    const [defaultSelectedConfig, setDefaultSelectedConfig] = useState<LLMConfig>(configPresets[0]);
     const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
-
-    const selectedChat = chats.find(chat => chat.id === selectedChatId);
-    const selectedConfig = selectedChat ? configPresets.find(config => config.id === selectedChat.configId) : defaultSelectedConfig;
+    const [selectedChat, setSelectedChat] = useState<Chat | null>();
+    const [configToEdit, setConfigToEdit] = useState<LLMConfig>();
+    
+    const selectedConfig = selectedChat ? configPresets.find(config => config.id === selectedChat.configId) : null;
 
     useEffect(()=> {
         var cfg = loadAppConfig();
         setAppConfig(cfg ?? defaultAppConfig);
-        setSelectedChatId(loadSelectedChatId());
+        setSelectedChat(loadSelectedChat());
         setConfigPresets(loadConfigPresets());
-        setChats(loadChats());
     }, []);
 
     useEffect(()=> {
     }, [appConfig]);
 
-    const createNewChat = () => {
-        if (configPresets.length === 0 || !selectedConfig) {
-            if(onError) onError("Info", "Please select or create a configuration before creating a new chat.");
-            return;
-        }
-
-        var sysprompt = [];
-
-        if (selectedConfig.defaultSystemPrompt) sysprompt = [{
-            sender: 'system',
-            content: selectedConfig.defaultSystemPrompt
-        }];
-
-        const newChat: Chat = {
-            id: uuidv4(),
-            configId: selectedConfig.id, // Assign the selected config
-            name: getUniqueChatName(chats.map(c => c.name), "Chat"),
-            messages: sysprompt
-        };
-        addChat(newChat);
-        setChats([...chats, newChat]);
-        setSelectedChatId(newChat.id);
-        saveSelectedChatId(newChat.id);
-    };
-
-    const createNewPreset = () => {
-        const newConfig = generateDefaultLLMConfig();
-        newConfig.name = getUniqueName(configPresets.map(c => c.name), newConfig.name);
-        addConfigPreset(newConfig);
-        setConfigPresets([...configPresets, newConfig]);
-    };
-
-    const updateChatName = (chatId: string, newName: string) => {
-        const updatedChat = { ...chats.find(chat => chat.id === chatId), name: newName };
-        modifyChat(updatedChat);
-        setChats(chats.map(chat => chat.id === chatId ? updatedChat : chat));
-    };
-
-    const handleDeleteChat = (chatId: string) => {
-        deleteChat(chatId);
-        setChats(chats.filter(chat => chat.id !== chatId));
-        if (selectedChatId === chatId) {
-            setSelectedChatId(null);
-            saveSelectedChatId(null);
-        }
-    };
-
     const handleMessagesChange = (newMessages: LLMChatProps['initialMessages']) => {
-        if (!selectedChatId) return;
-        const updatedChat = { ...chats.find(chat => chat.id === selectedChatId), messages: newMessages };
+        if (!selectedChat) return;
+        const updatedChat = { ...selectedChat, messages: newMessages };
         modifyChat(updatedChat);
-        setChats(chats.map(chat => chat.id === selectedChatId ? updatedChat : chat));
+        setSelectedChat(updatedChat);
     };
 
-    const handleEditConfig = (configId: string) => {
-        const configToEdit = configPresets.find(config => config.id === configId);
+    const handleEditConfig = (configToEdit: LLMConfig) => {
+        setConfigToEdit(configToEdit);
+
         if (configToEdit) {
             setShowRightDrawer(false);
-            setDefaultSelectedConfig(configToEdit);
             setTimeout(() => {
                 setRightDrawerView("llm-config");
                 setShowRightDrawer(true);
@@ -164,8 +104,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
 
     const handleDeleteConfigPreset = (configId: string) => {
         deleteConfigPreset(configId);
-        setConfigPresets(configPresets.filter(c => c.id !== configId));
-        setDefaultSelectedConfig(null);
+        setConfigPresets((configPresets) => configPresets.filter(c => c.id !== configId));
     };
 
     return (
@@ -185,6 +124,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                         >
                             <FontAwesomeIcon icon={faBars} /> Chats
                         </Button>
+                        {/* TODO */}
                         {/* <Button
                             variant="success"
                             onClick={() => setShowLeftDrawer(true)}
@@ -238,36 +178,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                 onHide={() => setShowLeftDrawer(false)}
                 placement="start"
             >
-                <Offcanvas.Header closeButton className="border-bottom p-2 w-100">
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            createNewChat();
-                            if (window.innerWidth < 768) setShowLeftDrawer(false);
-                        }}
-                        className="w-100"
-                    >
-                        New Chat
-                    </Button>
-                </Offcanvas.Header>
-                <Offcanvas.Body className="p-0 d-flex flex-column">
-                    <ListGroup variant="flush" className="overflow-auto flex-grow-1">
-                        {chats.map(chat => (
-                            <ChatListItem
-                                key={chat.id}
-                                chat={chat}
-                                isSelected={chat.id === selectedChatId}
-                                onSelect={() => {
-                                    setSelectedChatId(chat.id);
-                                    saveSelectedChatId(chat.id);
-                                    if (window.innerWidth < 768) setShowLeftDrawer(false);
-                                }}
-                                onRename={(newName) => updateChatName(chat.id, newName)}
-                                onDelete={() => handleDeleteChat(chat.id)}
-                            />
-                        ))}
-                    </ListGroup>
-                </Offcanvas.Body>
+                <ChatListGroup onError={onError} onClose={() => setShowLeftDrawer(false)} onSelectedChat={(e) => {setSelectedChat(e);}}></ChatListGroup>
             </Offcanvas>
 
             {/* Right Settings Drawer */}
@@ -278,17 +189,7 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                 className={rightDrawerView === 'llm-presets' ? '' : "responsive-offcanvas"}
             >
                 {rightDrawerView === 'llm-presets' ? (
-                    <Offcanvas.Header closeButton className="border-bottom p-2 w-100">
-                        <Button
-                            variant="warning"
-                            onClick={() => {
-                                createNewPreset()
-                            }}
-                            className="w-100"
-                        >
-                            New Config
-                        </Button>
-                    </Offcanvas.Header>
+                    <></>
                 ) : <></>}
                 {rightDrawerView === 'llm-config' ? (
                     <Offcanvas.Header closeButton>
@@ -309,12 +210,11 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                                 onSubmit={handleAppSettingsSave}
                                 onCancel={() => handleAppSettingsCancel()}
                             />
-                            {/* TODO  */}
                         </Offcanvas.Body>
                     ) : (
                         <Offcanvas.Body>
                             <LLMConfigForm
-                                initialState={defaultSelectedConfig}
+                                initialState={configToEdit}
                                 onSubmit={(config: LLMConfig) => handleFormEdit(config)}
                                 onDuplicate={(config: LLMConfig) => handleFormDuplicate(config)}
                                 onCancel={() => handleFormCancel()}
@@ -322,29 +222,17 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                         </Offcanvas.Body>
                     )
                 ) : (
-                    <Offcanvas.Body className="p-0 d-flex flex-column">
-                        <ListGroup variant="flush" className="overflow-auto flex-grow-1">
-                            {configPresets.map(config => (
-                                <ConfigPresetItem
-                                    key={config.id}
-                                    config={config}
-                                    isSelected={selectedChat ? selectedChat.configId === config.id : (selectedConfig && config.id === selectedConfig.id)}
-                                    onSelect={() => {
-                                        if (selectedChat) {
-                                            const updatedChat = { ...selectedChat, configId: config.id };
-                                            modifyChat(updatedChat);
-                                            setChats(chats.map(chat => chat.id === selectedChat.id ? updatedChat : chat));
-                                        } else {
-                                            setDefaultSelectedConfig(config);
-                                        }
-                                        if (window.innerWidth < 768) setShowRightDrawer(false);
-                                    }}
-                                    onEdit={(config) => handleEditConfig(config.id)}
-                                    onDelete={() => handleDeleteConfigPreset(config.id)}
-                                />
-                            ))}
-                        </ListGroup>
-                    </Offcanvas.Body>
+                        <ConfigPresetGroup
+                            selectedChat={selectedChat}
+                            updateConfigList={(presets) => {setConfigPresets(presets);}}
+                            onClose={function (): void {
+                                setShowRightDrawer(false);
+                            }}
+                            handleEditConfig={handleEditConfig}
+                            handleDeleteConfigPreset={handleDeleteConfigPreset} 
+                            onError={onError} 
+                            onSelectedChat={setSelectedChat} 
+                        />
                 )}
             </Offcanvas>
 
@@ -374,51 +262,3 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
 };
 
 export default React.memo(ChatDrawer);
-
-
-function getUniqueChatName(existingNames: string[], newName: string): string {
-    let copyNumber = 1;
-    let uniqueName = `${newName} ${copyNumber}`;
-
-    while (existingNames.includes(uniqueName)) {
-        copyNumber++;
-        uniqueName = `${newName} ${copyNumber}`;
-    }
-
-    return uniqueName;
-}
-
-function getUniqueName(existingNames: string[], newName: string): string {
-    if (!existingNames.includes(newName)) {
-        return newName;
-    }
-
-    // Regular expression to match the (copy X) pattern at the end of the string
-    const copyPattern = / \(copy \d+\)$/;
-
-    // Check if the newName already has a (copy X) suffix
-    if (copyPattern.test(newName)) {
-        // Extract the base name and the current copy number
-        const baseName = newName.replace(copyPattern, '');
-        const currentCopyNumber = parseInt(newName.match(copyPattern)[0].match(/\d+/)[0], 10);
-        let copyNumber = currentCopyNumber + 1;
-        let uniqueName = `${baseName} (copy ${copyNumber})`;
-
-        while (existingNames.includes(uniqueName)) {
-            copyNumber++;
-            uniqueName = `${baseName} (copy ${copyNumber})`;
-        }
-
-        return uniqueName;
-    } else {
-        let copyNumber = 1;
-        let uniqueName = `${newName} (copy ${copyNumber})`;
-
-        while (existingNames.includes(uniqueName)) {
-            copyNumber++;
-            uniqueName = `${newName} (copy ${copyNumber})`;
-        }
-
-        return uniqueName;
-    }
-}

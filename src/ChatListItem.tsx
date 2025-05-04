@@ -2,12 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button, ListGroup, Form, ButtonGroup } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPencil, faSave } from '@fortawesome/free-solid-svg-icons';
-import { Chat } from './storage';
+import { Chat, ChatListEntry } from './storage';
 import { isMobile } from 'react-device-detect';
 import Marquee from 'react-double-marquee';
 
 const ChatListItem: React.FC<{
-    chat: Chat;
+    chat: ChatListEntry;
     isSelected: boolean;
     onSelect: () => void;
     onRename: (newName: string) => void;

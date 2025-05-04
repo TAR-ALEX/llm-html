@@ -5,8 +5,13 @@ import { AppConfig } from "./AppConfig";
 export interface Chat {
     configId: string; // Reference to the LLMConfig id
     id: string;
-    name: string;
+    name: string; // delete get from list entry
     messages: LLMChatProps['initialMessages'];
+}
+
+export interface ChatListEntry {
+    id: string;
+    name: string;
 }
 
 // Utility function to safely parse JSON
@@ -25,6 +30,12 @@ export const loadChats = (): Chat[] => {
     const loadedChats = safeJsonParse<Chat[]>(localStorage.getItem('llm-chats'));
     // console.log('Loaded chats:', loadedChats);
     return loadedChats || [];
+};
+
+// Load a single chat by uuid
+export const loadChat = (chatId: string): Chat | null => {
+    const chats = loadChats();
+    return chats.find(chat => chat.id === chatId) || null;
 };
 
 // Save all chats to localStorage
@@ -65,7 +76,21 @@ export const modifyChat = (updatedChat: Chat) => {
     console.log(chatIndex !== -1 ? 'Chat modified successfully:' : 'Chat created successfully:', updatedChat.id);
 };
 
-// Load the selected chat ID from localStorage
+// Modify an existing chat or create a new one if not found
+export const modifyChatName = (updatedChat: ChatListEntry) => {
+    if (!updatedChat || !updatedChat.id) return;
+    const chats = loadChats();
+    const chatIndex = chats.findIndex(chat => chat.id === updatedChat.id);
+    if (chatIndex !== -1) {
+        chats[chatIndex] = { ...chats[chatIndex], ...updatedChat };
+    } else {
+        console.error("cannot rename chat.");
+    }
+    saveChats(chats);
+    console.log(chatIndex !== -1 ? 'Chat modified successfully:' : 'Chat created successfully:', updatedChat.id);
+};
+
+// Load the selected chat ID from localStorage, this is just the uuid of the chat that was last active
 export const loadSelectedChatId = (): string | null => {
     console.log('Loading selected chat ID from localStorage...');
     const savedId = localStorage.getItem('llm-selected-chat-id');
@@ -73,7 +98,7 @@ export const loadSelectedChatId = (): string | null => {
     return savedId || null;
 };
 
-// Save the selected chat ID to localStorage
+// Save the selected chat ID to localStorage, this is just the uuid of the chat that was last active
 export const saveSelectedChatId = (selectedChatId: string | null) => {
     console.log('Saving selected chat ID to localStorage...');
     console.log('Selected chat ID to save:', selectedChatId);
@@ -92,6 +117,12 @@ export const loadConfigPresets = (): LLMConfig[] => {
     const loadedConfigs = safeJsonParse<LLMConfig[]>(localStorage.getItem('llm-config-presets'));
     // console.log('Loaded config presets:', loadedConfigs);
     return loadedConfigs || [];
+};
+
+// Load a single config by uuid
+export const loadConfigPreset = (configId: string): LLMConfig | null => {
+    const configPresets = loadConfigPresets();
+    return configPresets.find(config => config.id === configId) || null;
 };
 
 // Save all config presets to localStorage
@@ -132,14 +163,6 @@ export const modifyConfigPreset = (updatedConfig: LLMConfig) => {
     console.log(configIndex !== -1 ? 'Config preset modified successfully:' : 'Config preset created successfully:', updatedConfig.id);
 };
 
-// Load the selected config ID from localStorage
-export const loadSelectedConfigId = (): string | null => {
-    console.log('Loading selected config ID from localStorage...');
-    const savedId = localStorage.getItem('llm-selected-config-id');
-    console.log('Selected config ID:', savedId);
-    return savedId || null;
-};
-
 export const loadAppConfig = (): AppConfig | null => {
     console.log('Loading app config...');
     const config = safeJsonParse<AppConfig>(localStorage.getItem('llm-html-app-config'));
@@ -158,16 +181,28 @@ export const saveAppConfig = (appConfig: AppConfig | null) => {
     }
 };
 
+// Lists all config UUIDs and their names
+export const listConfigUUIDsAndNames = (): { id: string; name: string }[] => {
+    const configPresets = loadConfigPresets();
+    return configPresets.map(config => ({ id: config.id, name: config.name }));
+};
 
-// Save the selected config ID to localStorage
-export const saveSelectedConfigId = (selectedConfigId: string | null) => {
-    console.log('Saving selected config ID to localStorage...');
-    console.log('Selected config ID to save:', selectedConfigId);
-    if (selectedConfigId) {
-        localStorage.setItem('llm-selected-config-id', selectedConfigId);
-        console.log('Selected config ID saved successfully.');
-    } else {
-        localStorage.removeItem('llm-selected-config-id');
-        console.log('Selected config ID removed successfully.');
-    }
+// Lists all chat UUIDs and their names
+export const listChatUUIDsAndNames = (): ChatListEntry[] => {
+    const chats = loadChats();
+    return chats.map(chat => ({ id: chat.id, name: chat.name }));
+};
+
+export const loadSelectedChatListEntry = (): ChatListEntry => {
+    const id = loadSelectedChatId();
+    const entries = listChatUUIDsAndNames();
+
+    // Find the entry that matches the id
+    const selectedEntry = entries.find(entry => entry.id === id);
+
+    return selectedEntry;
+};
+
+export const loadSelectedChat = (): Chat => {
+    return loadChat(loadSelectedChatId());
 };
