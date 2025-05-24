@@ -24,7 +24,7 @@ function newAssistantStarter(content?: string) {
 }
 
 const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError, inputValue, appConfig, uuid }) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages || []);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [wholeMessages, setWholeMessages] = useState<Message[]>(messages);
   const [newMessage, setNewMessage] = useState(inputValue ?? '');
   const [isLoading, setIsLoading] = useState(false);
@@ -47,10 +47,10 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   }, [uuid]);
 
   useEffect(() => {
-    if (appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) {
+    if ((appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) || messages === null) {
       setConfigId(llmConfig.id);
       setMessages((msg) => {
-        var newMsg = [...msg];
+        var newMsg = [...(msg??[])];
         if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
           newMsg.shift();
         }
@@ -261,7 +261,7 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
         
         <ChatThread
           key={messageUUID}
-          messages={messages}
+          messages={messages ?? []}
           onEdit={handleEditMessage}
           onRefresh={handleRefreshMessage}
           onContinue={handleContinueMessage}

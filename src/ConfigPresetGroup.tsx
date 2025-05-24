@@ -9,21 +9,25 @@ import { LLMConfig } from "./LLMConfig";
 interface ConfigListGroupProps {
     selectedChat: Chat | null;
     onClose: () => void;
-    updateConfigList: (cfgs: LLMConfig[]) => void;
     handleEditConfig: (cfg: LLMConfig) => void;
     handleDeleteConfigPreset: (configId: string) => void;
     onError: (header: string, msg: string) => void;
     onSelectedChat: (chat: Chat) => void;
 }
 
-const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, updateConfigList, onClose, onError, handleEditConfig, handleDeleteConfigPreset, onSelectedChat }) => {
-
+const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, onClose, onError, handleEditConfig, handleDeleteConfigPreset, onSelectedChat }) => {
+    const [selectedConfig, setSelectedConfig] = useState(selectedChat?.configId);
     const [configPresets, setConfigPresets] = useState(loadConfigPresets());
 
     const handleDelete = (cfgID:string) => {
+        if(cfgID == selectedConfig){
+            const updatedChat = { ...selectedChat, configId: null };
+            modifyChat(updatedChat);
+            onSelectedChat(updatedChat);
+            setSelectedConfig(null);
+        }
         handleDeleteConfigPreset(cfgID);
         let presets = loadConfigPresets();
-        updateConfigList(presets);
         setConfigPresets(presets);
     };
 
@@ -32,7 +36,6 @@ const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, updat
         newConfig.name = getUniqueName(configPresets.map(c => c.name), newConfig.name);
         addConfigPreset(newConfig);
         let presets = loadConfigPresets();
-        updateConfigList(presets);
         setConfigPresets(presets);
     };
 
@@ -54,12 +57,13 @@ const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, updat
                     <ConfigPresetItem
                         key={config.id}
                         config={config}
-                        isSelected={selectedChat?.configId === config.id}
+                        isSelected={selectedConfig === config.id}
                         onSelect={() => {
                             if (selectedChat) {
                                 const updatedChat = { ...selectedChat, configId: config.id };
                                 modifyChat(updatedChat);
                                 onSelectedChat(updatedChat);
+                                setSelectedConfig(config.id);
                             }
                             if (window.innerWidth < 768) onClose();
                         }}

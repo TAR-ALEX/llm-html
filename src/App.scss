@@ -56,14 +56,8 @@
     --bs-offcanvas-width: 100% !important;
 }
 
-@media (min-width: 1400px) {
-    .responsive-offcanvas {
-        --bs-offcanvas-width: 75% !important;
-    }
-}
-
 @media (min-width: 1200px) {
     .responsive-offcanvas {
-        --bs-offcanvas-width: 75% !important;
+        --bs-offcanvas-width: 85% !important;
     }
 }

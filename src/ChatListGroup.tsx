@@ -30,17 +30,10 @@ const ChatListGroup: React.FC<ChatListGroupProps> = ({ onClose, onError, onSelec
             selectedConfig = loadConfigPreset(selectedChat.configId);
         }
 
-        var sysprompt = [];
-
-        if (selectedConfig?.defaultSystemPrompt ?? false) sysprompt = [{
-            sender: 'system',
-            content: selectedConfig.defaultSystemPrompt
-        }];
-
         const newChat: Chat = {
             id: uuidv4(),
             name: getUniqueChatName(chats.map(c => c.name), "Chat"),
-            messages: sysprompt,
+            messages: null,
             configId: selectedChat?.configId,
         };
 
