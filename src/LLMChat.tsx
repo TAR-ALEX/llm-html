@@ -8,11 +8,13 @@ import LLMApi, { ChatCompletion, ChatCompletionChunk } from './LlamaCppApi';
 import { getThinkingStartAndEnd, LLMConfig, maskToLLMConfigChat, removeThinkingTokens } from './LLMConfig';
 import { AppConfig } from './AppConfig';
 import ScrollView from './ScrollView';
+import { loadChat, modifyChat, modifyChatMessages } from './storage';
+import { Console } from 'console';
 
 export type LLMChatProps = {
   llmConfig: LLMConfig;
-  onMessagesChange?: (messages: Message[]) => void;
-  initialMessages?: Message[];
+  // onMessagesChange?: (messages: Message[]) => void;
+  // initialMessages?: Message[];
   onError?: (header: string, content: string) => void;
   inputValue?: string;
   appConfig?: AppConfig;
@@ -23,17 +25,36 @@ function newAssistantStarter(content?: string) {
   return { sender: 'assistant', content: content ?? "" };
 }
 
-const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialMessages, onError, inputValue, appConfig, uuid }) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [wholeMessages, setWholeMessages] = useState<Message[]>(messages);
+const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onError, inputValue, appConfig, uuid }) => {//onMessagesChange, initialMessages,
+  const [messages, setMessages] = useState<Message[]>(null);
+  const [wholeMessages, setWholeMessages] = useState<Message[]>(null);
   const [newMessage, setNewMessage] = useState(inputValue ?? '');
   const [isLoading, setIsLoading] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [configId, setConfigId] = useState(llmConfig.id);
-  const [messageUUID, setMessageUUID] = useState(uuidv4());
+  const [messageUUID, setMessageUUID] = useState(null);
   const messageUUIDRef = useRef(uuid);
+
+  const updateSystemPrompt = useCallback(() => {
+      setMessages((msg) => {
+        if(appConfig?.replaceSystemPromptOnConfigChange || msg === null){
+          var newMsg = [...(msg??[])];
+          if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
+            newMsg.shift();
+          }
+          if (llmConfig.defaultSystemPrompt) {
+            newMsg.unshift({ sender: 'system', content: llmConfig.defaultSystemPrompt })
+          }
+          setWholeMessages(newMsg);
+          return newMsg;
+        }else{
+          return msg
+        }
+      });
+
+  }, [appConfig, llmConfig]);
 
   // Update the ref whenever messageUUID changes
   useEffect(() => {
@@ -41,30 +62,25 @@ const LLMChat: React.FC<LLMChatProps> = ({ llmConfig, onMessagesChange, initialM
   }, [messageUUID]);
 
   useEffect(() => {
+    let initialMessages = loadChat(uuid)?.messages;
+
     setMessages(initialMessages);
     setWholeMessages(initialMessages);
+
+    setConfigId(llmConfig.id);
+    updateSystemPrompt();
     setMessageUUID(uuid);
   }, [uuid]);
 
   useEffect(() => {
-    if ((appConfig?.replaceSystemPromptOnConfigChange && configId !== llmConfig.id) || messages === null) {
+    if (configId !== llmConfig.id ){
       setConfigId(llmConfig.id);
-      setMessages((msg) => {
-        var newMsg = [...(msg??[])];
-        if (newMsg.length !== 0 && newMsg[0].sender === 'system') {
-          newMsg.shift();
-        }
-        if (llmConfig.defaultSystemPrompt) {
-          newMsg.unshift({ sender: 'system', content: llmConfig.defaultSystemPrompt })
-        }
-        setWholeMessages(newMsg);
-        return newMsg;
-      });
+      updateSystemPrompt();
     }
-  }, [llmConfig, appConfig, initialMessages]);
+  }, [llmConfig]);
 
   useEffect(() => {
-    onMessagesChange?.(wholeMessages);
+    if(messageUUID) modifyChatMessages(messageUUID, wholeMessages);
   }, [wholeMessages]);
 
   useEffect(() => {

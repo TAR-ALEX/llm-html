@@ -6,7 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faExchangeAlt, faCaretDown, faGears } from '@fortawesome/free-solid-svg-icons';
 import LLMConfigForm from './LLMConfigForm';
 import { LLMConfig } from './LLMConfig';
-import { Chat, loadConfigPresets, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadAppConfig, saveAppConfig, loadSelectedChat, loadConfigPreset } from './storage';
+import { Chat, loadConfigPresets, modifyChat, addConfigPreset, deleteConfigPreset, modifyConfigPreset, loadAppConfig, saveAppConfig, loadSelectedChat, loadConfigPreset, ChatListEntry } from './storage';
 import AppConfigForm from './AppConfigForm';
 import { AppConfig, defaultAppConfig } from './AppConfig';
 import ChatListGroup from './ChatListGroup';
@@ -19,7 +19,7 @@ interface ChatDrawerInterface {
 
 const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
     const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
-    const [selectedChat, setSelectedChatPrivate] = useState<Chat | null>(null);
+    const [selectedChat, setSelectedChatPrivate] = useState<ChatListEntry | null>(null);
     const [selectedConfig, setSelectedConfig] = useState<LLMConfig | null>(null);
     //NOTE: dont use setSelectedConfig, set it by setting the chats config via setSelectedChat
     
@@ -40,13 +40,6 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
 
     useEffect(()=> {
     }, [appConfig]);
-
-    const handleMessagesChange = (newMessages: LLMChatProps['initialMessages']) => {
-        if (!selectedChat) return;
-        const updatedChat = { ...selectedChat, messages: newMessages };
-        modifyChat(updatedChat);
-        setSelectedChat(updatedChat);
-    };
 
     const handleEditConfig = (configToEdit: LLMConfig) => {
         if (configToEdit) {
@@ -203,17 +196,17 @@ const ChatDrawer: React.FC<ChatDrawerInterface> = ({onError}) => {
                         uuid={selectedChat.id}
                         appConfig={appConfig}
                         llmConfig={selectedConfig}
-                        initialMessages={selectedChat.messages}
-                        onMessagesChange={handleMessagesChange}
+                        // initialMessages={selectedChat.messages}
+                        // onMessagesChange={handleMessagesChange}
                         onError={onError}
                     />
-                ) : selectedConfig ? (
+                ) : selectedChat ? (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">
-                        Select a chat or create a new one
+                        No configuration selected. <br /> Please select or create one.
                     </div>
                 ) : (
                     <div className="d-flex h-100 justify-content-center align-items-center text-body-secondary">
-                        No configuration selected. <br /> Please select or create one.
+                        Select a chat or create a new one
                     </div>
                 )}
             </div>

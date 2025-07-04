@@ -1,17 +1,19 @@
 import { LLMConfig } from "./LLMConfig";
 import { LLMChatProps } from "./LLMChat";
 import { AppConfig } from "./AppConfig";
+import { Message } from "./ChatBubble";
 
 export interface Chat {
     configId: string; // Reference to the LLMConfig id
     id: string;
     name: string; // delete get from list entry
-    messages: LLMChatProps['initialMessages'];
+    messages: Message[];
 }
 
 export interface ChatListEntry {
     id: string;
     name: string;
+    configId?: string;
 }
 
 // Utility function to safely parse JSON
@@ -82,12 +84,39 @@ export const modifyChatName = (updatedChat: ChatListEntry) => {
     const chats = loadChats();
     const chatIndex = chats.findIndex(chat => chat.id === updatedChat.id);
     if (chatIndex !== -1) {
-        chats[chatIndex] = { ...chats[chatIndex], ...updatedChat };
+        chats[chatIndex] = { ...chats[chatIndex], name: updatedChat.name };
     } else {
         console.error("cannot rename chat.");
     }
     saveChats(chats);
     console.log(chatIndex !== -1 ? 'Chat modified successfully:' : 'Chat created successfully:', updatedChat.id);
+};
+
+// Modify an existing chat config
+export const modifyChatConfigId = (updatedChat: ChatListEntry) => {
+    if (!updatedChat || !updatedChat.id) return;
+    const chats = loadChats();
+    const chatIndex = chats.findIndex(chat => chat.id === updatedChat.id);
+    if (chatIndex !== -1) {
+        chats[chatIndex] = { ...chats[chatIndex], configId: updatedChat.configId };
+    } else {
+        console.error("cannot rename chat.");
+    }
+    saveChats(chats);
+    console.log(chatIndex !== -1 ? 'Chat modified successfully:' : 'Chat created successfully:', updatedChat.id);
+};
+
+// Modify an existing chat config
+export const modifyChatMessages = (uuid: string, messages: Message[]) => {
+    const chats = loadChats();
+    const chatIndex = chats.findIndex(chat => chat.id === uuid);
+    if (chatIndex !== -1) {
+        chats[chatIndex] = { ...chats[chatIndex], messages: messages };
+    } else {
+        console.error("cannot rename chat.");
+    }
+    saveChats(chats);
+    console.log(chatIndex !== -1 ? 'Chat messages modified successfully:' : 'Chat created successfully:', uuid);
 };
 
 // Load the selected chat ID from localStorage, this is just the uuid of the chat that was last active
@@ -190,7 +219,7 @@ export const listConfigUUIDsAndNames = (): { id: string; name: string }[] => {
 // Lists all chat UUIDs and their names
 export const listChatUUIDsAndNames = (): ChatListEntry[] => {
     const chats = loadChats();
-    return chats.map(chat => ({ id: chat.id, name: chat.name }));
+    return chats.map(chat => ({ id: chat.id, name: chat.name, configId: chat.configId }));
 };
 
 export const loadSelectedChatListEntry = (): ChatListEntry => {

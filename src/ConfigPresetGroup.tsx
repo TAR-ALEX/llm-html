@@ -1,18 +1,18 @@
 import { Offcanvas, ListGroup, Button } from "react-bootstrap";
 import ConfigPresetItem from "./ConfigPresetItem";
-import { addConfigPreset, Chat, loadConfigPresets, modifyChat } from "./storage";
+import { addConfigPreset, Chat, ChatListEntry, loadConfigPresets, modifyChat, modifyChatConfigId } from "./storage";
 import React, { useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import { LLMConfig } from "./LLMConfig";
 
 
 interface ConfigListGroupProps {
-    selectedChat: Chat | null;
+    selectedChat: ChatListEntry | null;
     onClose: () => void;
     handleEditConfig: (cfg: LLMConfig) => void;
     handleDeleteConfigPreset: (configId: string) => void;
     onError: (header: string, msg: string) => void;
-    onSelectedChat: (chat: Chat) => void;
+    onSelectedChat: (chat: ChatListEntry) => void;
 }
 
 const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, onClose, onError, handleEditConfig, handleDeleteConfigPreset, onSelectedChat }) => {
@@ -22,7 +22,7 @@ const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, onClo
     const handleDelete = (cfgID:string) => {
         if(cfgID == selectedConfig){
             const updatedChat = { ...selectedChat, configId: null };
-            modifyChat(updatedChat);
+            modifyChatConfigId(updatedChat);
             onSelectedChat(updatedChat);
             setSelectedConfig(null);
         }
@@ -61,11 +61,13 @@ const ConfigPresetGroup: React.FC<ConfigListGroupProps> = ({ selectedChat, onClo
                         onSelect={() => {
                             if (selectedChat) {
                                 const updatedChat = { ...selectedChat, configId: config.id };
-                                modifyChat(updatedChat);
+                                modifyChatConfigId(updatedChat);
                                 onSelectedChat(updatedChat);
                                 setSelectedConfig(config.id);
+                                if (window.innerWidth < 768) onClose();
+                            }else{
+                                onError("Error", "Every config must be tied to a chat, create a chat first then assign the config to it.")
                             }
-                            if (window.innerWidth < 768) onClose();
                         }}
                         onEdit={(config) => handleEditConfig(config)}
                         onDelete={() => handleDelete(config.id)}

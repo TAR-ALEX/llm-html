@@ -49,10 +49,16 @@ you can optionally serve it after building with:
 npm run preview
 ```
 
+or to have it exposed on the network run:
+
+```bash
+npm run preview -- --host
+```
+
 ## Contributing
 
 Contributions are welcome. Please open an issue or submit a pull request.
 
 ## License
 
-This project is licensed under the GNU GENERAL PUBLIC LICENSE Version 3. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the BSD3 Liscense. See the [LICENSE](LICENSE) file for details.
